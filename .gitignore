@@ -1,0 +1,18 @@
+# Nextflow
+work/
+.nextflow/
+.nextflow.*
+*.html
+timeline*.html
+report*.html
+trace*.txt
+dag*.dot
+dag*.svg
+
+# Results (adjust to your output directory name)
+results/
+output/
+out/
+
+# Logs
+*.log
