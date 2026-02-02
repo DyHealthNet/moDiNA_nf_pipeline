@@ -71,7 +71,6 @@ if __name__ == '__main__':
     parser.add_argument('--output_suffix', type=str, default='',
                         help='Suffix to append to output filenames (e.g., "_sim1")')
 
-
     
     args = parser.parse_args()
     
@@ -105,5 +104,5 @@ if __name__ == '__main__':
     context1.to_csv(f'{args.context_1}_simulated_data{args.output_suffix}.csv', index=False)
     context2.to_csv(f'{args.context_2}_simulated_data{args.output_suffix}.csv', index=False)
     meta.to_csv(f'meta{args.output_suffix}.csv', index=False)
-    # TODO: output shift_nodes, corr_nodes, shift_corr_nodes
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_data{args.output_suffix}.txt')
     
