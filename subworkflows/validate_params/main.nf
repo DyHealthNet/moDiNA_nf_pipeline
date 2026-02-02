@@ -81,7 +81,7 @@ def validateRankingAlgorithm(ranking_algorithm) {
     }
 }
 
-def removeInvalidConfigurations(configs){
+def removeInvalidConfigurations(configs, warn = true){
     def validConfigs = []
     for (config in configs) {
         node_metric = config[0]
@@ -89,14 +89,14 @@ def removeInvalidConfigurations(configs){
         ranking_algo = config[2]
         // Check whether edge_metric = post-E, post-CS, or post-LS and DimontRank is used -> give error
         if (['post-E', 'post-CS', 'post-LS'].contains(edge_metric) && ranking_algo == 'DimontRank') {
-            log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
+            if (warn) log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
             continue
         }
 
         // Check whether DimontRank, absDimontRank, PageRank, direct_edge is used with any node_metric -> just give warning
         if (['DimontRank', 'absDimontRank', 'PageRank', 'direct_edge'].contains(ranking_algo)) {
             if (node_metric != '') {
-                log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
+                if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
                 config[0] = ''
             }
         }
@@ -104,7 +104,7 @@ def removeInvalidConfigurations(configs){
         // Check whether direct_node is used with any edge_metric -> just give warning
         if (ranking_algo == 'direct_node') {
             if (edge_metric != '') {
-                log.warn "WARNING: Configuration with ranking_algorithm 'direct_node' does not use edge_metric and will ignore the provided edge_metric '${edge_metric}'."
+                if (warn) log.warn "WARNING: Configuration with ranking_algorithm 'direct_node' does not use edge_metric and will ignore the provided edge_metric '${edge_metric}'."
                 config[1] = ''
             }
         }
@@ -112,7 +112,7 @@ def removeInvalidConfigurations(configs){
         // Check whether for configs with algorithm PageRank+ the node and edge metrics are given
         if (ranking_algo == 'PageRank+') {
             if (node_metric == '' || edge_metric == '') {
-                log.warn "WARNING: Configuration with ranking_algorithm 'PageRank+' requires both node_metric and edge_metric to be provided. This configuration will be skipped."
+                if (warn) log.warn "WARNING: Configuration with ranking_algorithm 'PageRank+' requires both node_metric and edge_metric to be provided. This configuration will be skipped."
                 continue
             }
         }
@@ -236,6 +236,8 @@ workflow validate_params {
         configs = [[params.diff_net_analysis.node_metric, 
                    params.diff_net_analysis.edge_metric, 
                    params.diff_net_analysis.ranking_algorithm]]
+        // Validating each configuration and removing invalid ones
+        configs = removeInvalidConfigurations(configs, warn = true)
     }
 
     if (params.run_type == 'all'){
@@ -244,6 +246,9 @@ workflow validate_params {
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
+
+        // Validating each configuration and removing invalid ones
+        configs = removeInvalidConfigurations(configs, warn = false)
 
     }
 
@@ -284,10 +289,10 @@ workflow validate_params {
         }
 
         log.info "Loaded ${configs.size()} configurations from file"
+        // Validating each configuration and removing invalid ones
+        configs = removeInvalidConfigurations(configs, warn = true)
     }
 
-    // Validating each configuration and removing invalid ones
-    configs = removeInvalidConfigurations(configs)
         
     if (configs.size() == 0) {
         error "ERROR: No valid configurations found after validation. Please check your parameters."
