@@ -13,6 +13,7 @@ process simulate_copula {
         tuple val(simulation_id), path("${params.name_context_1}_simulated_data_${simulation_id}.csv"), emit: file_context_1
         tuple val(simulation_id), path("${params.name_context_2}_simulated_data_${simulation_id}.csv"), emit: file_context_2
         tuple val(simulation_id), path("meta_${simulation_id}.csv"), emit: file_meta
+        tuple val(simulation_id), path("ground_truth_simulated_data_${simulation_id}.txt"), emit: file_ground_truth
     
     script:
     """
