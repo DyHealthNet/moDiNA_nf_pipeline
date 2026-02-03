@@ -4,13 +4,14 @@ process context_network_inference {
     cpus 8
     memory '32 GB'
 
-    tag "${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${context_name}"
+    tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}"
 
     input:
-        tuple val(simulation_id), val(context_name), path(file_context_data), path(file_meta_data)
+        tuple val(meta), path(file_context_data), path(file_meta_data)
 
     output:
-        tuple val(simulation_id), val(context_name), path("${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${context_name}_association_scores.csv")
+        tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores.csv")
+    
     script:
     """
         context_network_inference.py \\
@@ -21,7 +22,7 @@ process context_network_inference {
             --cont_cat "${params.diff_net_analysis.cont_cat}" \\
             --multiple_testing "${params.diff_net_analysis.multiple_testing}" \\
             --num_workers "${task.cpus}" \\
-            --output_prefix "${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${context_name}_association_scores"       
+            --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores"       
     """
     
 }
