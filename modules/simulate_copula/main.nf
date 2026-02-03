@@ -7,13 +7,13 @@ process simulate_copula {
     when: params.data_type == 'simulation'
 
     input:
-        val simulation_id
+        val meta  // meta map: [id: simulation_id]
 
     output:
-        tuple val(simulation_id), path("${params.name_context_1}_simulated_data_${simulation_id}.csv"), emit: file_context_1
-        tuple val(simulation_id), path("${params.name_context_2}_simulated_data_${simulation_id}.csv"), emit: file_context_2
-        tuple val(simulation_id), path("meta_${simulation_id}.csv"), emit: file_meta
-        tuple val(simulation_id), path("ground_truth_simulated_data_${simulation_id}.txt"), emit: file_ground_truth
+        tuple val(meta), path("${params.name_context_1}_simulated_data_${meta.id}.csv"), emit: file_context_1
+        tuple val(meta), path("${params.name_context_2}_simulated_data_${meta.id}.csv"), emit: file_context_2
+        tuple val(meta), path("meta_${meta.id}.csv"), emit: file_meta
+        tuple val(meta), path("ground_truth_simulated_data_${meta.id}.txt"), emit: file_ground_truth
     
     script:
     """
@@ -41,7 +41,7 @@ process simulate_copula {
             --n_both_bi_cont "${params.simulation.n_both_bi_cont}" \
             --shift "${params.simulation.shift}" \
             --corr ${params.simulation.corr} \
-            --output_suffix "_${simulation_id}"
+            --output_suffix "_${meta.id}"
     """
     
 }

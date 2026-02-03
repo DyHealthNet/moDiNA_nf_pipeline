@@ -4,13 +4,14 @@ process node_edge_ranking {
     cpus 8
     memory '32 GB'
 
-    tag "${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${node_metric}_${edge_metric}_${ranking_algorithm}"
+    tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}"
 
     input:
-        tuple val(simulation_id), val(node_metric), val(edge_metric), val(ranking_algorithm), path(node_rankings), path(edge_rankings), path(meta_file)
+        tuple val(meta), path(node_rankings), path(edge_rankings), path(meta_file)
 
     output:
-        tuple val(simulation_id), val(node_metric), val(edge_metric), val(ranking_algorithm), path("${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${node_metric}_${edge_metric}_${ranking_algorithm}_ranking.csv"), path(meta_file)
+        tuple val(meta), path(node_rankings), path(edge_rankings), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}_ranking.csv")
+
     
     script:
     """
@@ -18,8 +19,8 @@ process node_edge_ranking {
             --node_metric_file "${node_rankings}" \\
             --edge_metric_file "${edge_rankings}" \\
             --meta_file "${meta_file}" \\
-            --ranking_algorithm "${ranking_algorithm}" \\
-            --output_prefix "${params.data_type == 'simulation' ? "sim${simulation_id}_" : ""}${node_metric}_${edge_metric}_${ranking_algorithm}"
+            --ranking_algorithm "${meta.algorithm}" \\
+            --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}"
     """
     
 }
