@@ -1,6 +1,6 @@
 // Helper function to validate filtering parameters
 def validateFilteringParams(filter_method, filter_param, filter_metric, filter_rule) {
-    def valid_filter_methods = ['degree', 'density', 'threshold']
+    def valid_filter_methods = ['degree', 'density', 'quantile']
     
     if (!valid_filter_methods.contains(filter_method)) {
         error "ERROR: Parameter 'diff_net_analysis.filter_method' must be one of: ${valid_filter_methods.join(', ')}"
@@ -20,7 +20,7 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
         if (filter_param <= 0) {
             error "ERROR: Parameter 'diff_net_analysis.filter_param' must be greater than 0 when filter_method is 'degree'"
         }
-    } else if (filter_method == 'density' || filter_method == 'threshold') {
+    } else if (filter_method == 'density' || filter_method == 'quantile') {
         // density/threshold: must be a float in the open interval (0, 1)
         if (!(filter_param instanceof Number)) {
             error "ERROR: Parameter 'diff_net_analysis.filter_param' must be a number when filter_method is '${filter_method}'"
@@ -62,7 +62,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS']
+    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -87,8 +87,8 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether edge_metric = post-E, post-CS, or post-LS and DimontRank is used -> give error
-        if (['post-E', 'post-CS', 'post-LS'].contains(edge_metric) && ranking_algo == 'DimontRank') {
+        // Check whether edge_metric = post-E, post-CS, post-LS, post-PE and DimontRank is used -> give error
+        if (['post-E', 'post-CS', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
             if (warn) log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
             continue
         }
@@ -242,7 +242,7 @@ workflow validate_params {
 
     if (params.run_type == 'all'){
         def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
-        def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS']
+        def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
