@@ -62,6 +62,16 @@ if __name__ == '__main__':
     else:
         max_path_length = args.max_path_length
         
+    if args.node_metric == "":
+        node_metric = None
+    else:
+        node_metric = args.node_metric
+        
+    if args.edge_metric == "":
+        edge_metric = None
+    else:
+        edge_metric = args.edge_metric
+        
     
     # Perform differential network analysis
     edges_diff, nodes_diff = modina.compute_diff_network(
@@ -69,14 +79,24 @@ if __name__ == '__main__':
         scores2=scores2,
         context1=data1,
         context2=data2,
-        node_metric=args.node_metric,
-        edge_metric=args.edge_metric,
+        node_metric=node_metric,
+        edge_metric=edge_metric,
         stc_test=stc_test,
         max_path_length=max_path_length,
         correction=args.multiple_testing    
     )
     
-    edges_diff.to_csv(f'{args.output_prefix}_edge_metrics.csv', index=False)
+    if nodes_diff is None:
+        print("No node metrics calculated.")
+        # Write empty file
+        nodes_diff = pd.DataFrame()
+        
+    if edges_diff is None:
+        print("No edge metrics calculated.")
+        edges_diff = pd.DataFrame()
+ 
     nodes_diff.to_csv(f'{args.output_prefix}_node_metrics.csv', index=True)
+    edges_diff.to_csv(f'{args.output_prefix}_edge_metrics.csv', index=False)
+
     print("Differential network analysis completed successfully")
 
