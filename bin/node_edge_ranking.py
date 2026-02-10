@@ -33,17 +33,30 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-     # Load data
-    nodes_diff = pd.read_csv(args.node_metric_file, index_col=0)
-    edges_diff = pd.read_csv(args.edge_metric_file)
-    meta_file = pd.read_csv(args.meta_file)
-    
+    # Load data with error handling
+    try:
+        nodes_diff = pd.read_csv(args.node_metric_file, index_col=0)
+    except pd.errors.EmptyDataError:
+        nodes_diff = None
+    if nodes_diff is not None and nodes_diff.empty:
+        nodes_diff = None
+
+    try:
+        edges_diff = pd.read_csv(args.edge_metric_file)
+    except pd.errors.EmptyDataError:
+        edges_diff = None
+    if edges_diff is not None and edges_diff.empty:
+        edges_diff = None
+        
+    meta_df = pd.read_csv(args.meta_file)
+
+
     # Run ranking computation
     ranks, ranks_per_type = modina.compute_ranking(
         nodes_diff=nodes_diff,
         edges_diff=edges_diff,
         ranking_alg=args.ranking_algorithm,
-        meta_file=meta_file
+        meta_file=meta_df
     )
     
     ranking_df = pd.DataFrame({"node": ranks, "rank": range(1, len(ranks) + 1)})

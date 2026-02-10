@@ -1,0 +1,10 @@
+name: modina-evaluation-env
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.3
+  - r-proc
+  - r-data.table
+  - r-ggplot2
+  - r-argparse
+  - r-rcolorbrewer

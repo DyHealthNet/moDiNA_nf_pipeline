@@ -6,6 +6,7 @@ include {context_network_inference} from './modules/context_network_inference/ma
 include {filter_context_networks} from './modules/filter_context_networks/main.nf'
 include {differential_network_inference} from './modules/differential_network_inference/main.nf'
 include {node_edge_ranking} from './modules/node_edge_ranking/main.nf'
+include {evaluation_auc} from './modules/evaluation_auc/main.nf'
 
 workflow {
 
@@ -144,7 +145,7 @@ workflow {
     }     
 
     // Write .csv file
-    summary_data
+    summary_file = summary_data
         .map { row ->
             if(params.data_type == "simulation"){
                 "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]},${row[9]}"
@@ -162,8 +163,11 @@ workflow {
         }
         .collectFile(name: 'summary.csv', storeDir: params.out_dir)
 
-    
-   
+    // Evaluation
+
+    if (params.data_type == 'simulation') {
+        evaluation_auc(summary_file)
+    }
 
 
 }
