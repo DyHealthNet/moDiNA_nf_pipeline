@@ -87,8 +87,8 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether edge_metric = post-E, post-CS, post-LS, post-PE and DimontRank is used -> give error
-        if (['post-E', 'post-CS', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
+        // Check whether edge_metric = post-P, post-E, post-CS, post-LS, post-PE and DimontRank is used -> give error
+        if (['post-P', 'post-E', 'post-CS', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
             if (warn) log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
             continue
         }
