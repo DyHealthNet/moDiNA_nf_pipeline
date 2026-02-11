@@ -1,5 +1,5 @@
 process evaluation_auc {
-    conda "envs/evaluation_r.yml"
+    conda "/home/larend/miniforge3/envs/modina-evaluation-env"
     publishDir "${params.out_dir}/evaluation_auc", mode: 'copy'
 
     input:

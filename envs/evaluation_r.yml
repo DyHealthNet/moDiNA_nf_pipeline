@@ -8,3 +8,7 @@ dependencies:
   - r-ggplot2
   - r-argparse
   - r-rcolorbrewer
+  - r-stringr
+  - r-dplyr
+  - r-colorspace
+  - r-patchwork

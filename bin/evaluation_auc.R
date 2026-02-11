@@ -52,6 +52,7 @@ args <- parser$parse_args()
 summary_file <- args$summary_file
 
 ######## ------------- Process data ------------- ########
+######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
 # Store edge ranking independently
@@ -86,7 +87,7 @@ results$node_metric <- factor(results$node_metric, levels = names(node_metrics_c
 results$edge_metric <- factor(results$edge_metric, levels = names(edge_metrics_colors))
 
 # Plot
-ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
+p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
   geom_tile(color="black") + 
   geom_text(aes(label = sprintf('%.2f', mean_auc)), size = 3) +
   facet_grid(algorithm~., scales = "free", space = "free") +
@@ -100,58 +101,58 @@ ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
     axis.text.y = element_text(size = 10),
     strip.text.y = element_text(size = 10, angle = 0),
     strip.text.x = element_text(size = 10),
-    axis.title.x = element_text(size = 10, face = 'bold'),
-    axis.title.y = element_text(size = 10, face = 'bold'),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
     strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5)
   )
 
-ggsave("overall_heatmap_auc.png", width = 8, height = 10, dpi = 300)
-
+ggsave("overall_heatmap_auc.png", width = 8, height = 10, dpi = 300, bg = "white")
+  
 for(al in unique(results$algorithm)){
   print(paste0("Algorithm: ", al))
-  ggplot(results[results$algorithm == al,], aes(y = node_metric, x = mean_auc, fill = edge_metric)) +
-    geom_bar(stat = "identity", position = position_dodge(0.9)) +
+  dt <- results[results$algorithm == al,]
+  n_uniq_comb <- nrow(unique(dt[, c("node_metric", "edge_metric")]))
+  ggplot(dt, aes(y = node_metric, x = mean_auc, fill = edge_metric)) +
+    geom_bar(stat = "identity", position = position_dodge(0.9), width = 0.9) +
     geom_errorbar(aes(xmin = mean_auc - sd_auc, xmax = mean_auc + sd_auc), 
                   position = position_dodge(0.9), width = 0.5) +
-    labs(x = "Mean AUC", y = "Edge Metric", fill = "Edge Metric") +
-    theme_minimal() +
+    labs(x = "Mean AUC", y = "Node Metric", fill = "Edge Metric") +
+    theme_bw() +
     ggtitle(al)+
     theme(
-      panel.grid = element_blank(),
       panel.spacing.x = unit(1, 'lines'),
       axis.text.x = element_text(size = 10),
       axis.text.y = element_text(size = 10),
       strip.text.y = element_text(size = 10, angle = 0),
       strip.text.x = element_text(size = 10),
-      axis.title.x = element_text(size = 10, face = 'bold'),
-      axis.title.y = element_text(size = 10, face = 'bold'),
+      axis.title.x = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
       strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5),
       plot.title = element_text(size = 12, hjust = 0.5) 
     ) +
     scale_fill_manual(values = edge_metrics_colors)
-  ggsave(paste0("barplot_auc_algorithm_", al, "_edge_metrics_colored.png"), width = 8, height = 5, dpi = 300)
+  ggsave(paste0("barplot_auc_algorithm_", al, "_edge_metrics_colored.png"), width = 8, height = 5, dpi = 300, bg = "white")
 
-  ggplot(results[results$algorithm == al,], aes(y = edge_metric, x = mean_auc, fill = node_metric)) +
+  ggplot(dt, aes(y = edge_metric, x = mean_auc, fill = node_metric)) +
     geom_bar(stat = "identity", position = position_dodge(0.9)) +
     geom_errorbar(aes(xmin = mean_auc - sd_auc, xmax = mean_auc + sd_auc), 
                   position = position_dodge(0.9), width = 0.5) +
     labs(x = "Mean AUC", y = "Edge Metric", fill = "Node Metric") +
-    theme_minimal() +
+    theme_bw() +
     ggtitle(al)+
     theme(
-      panel.grid = element_blank(),
       panel.spacing.x = unit(1, 'lines'),
       axis.text.x = element_text(size = 10),
       axis.text.y = element_text(size = 10),
       strip.text.y = element_text(size = 10, angle = 0),
       strip.text.x = element_text(size = 10),
-      axis.title.x = element_text(size = 10, face = 'bold'),
-      axis.title.y = element_text(size = 10, face = 'bold'),
+      axis.title.x = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
       strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5),
       plot.title = element_text(size = 12, hjust = 0.5) 
     ) +
     scale_fill_manual(values = node_metrics_colors)
-  ggsave(paste0("barplot_auc_algorithm_", al, "_node_metrics_colored.png"), width = 8, height = 5, dpi = 300)
+  ggsave(paste0("barplot_auc_algorithm_", al, "_node_metrics_colored.png"), width = 8, height = 5, dpi = 300, bg = "white")
   
   
 }
