@@ -6,7 +6,7 @@ process evaluation_association_scores {
     path summary_file
 
     output:
-    path "association_scores_point_plot.png", emit: heatmap
+    path "association_scores_point_plot.png", emit: association_scores_point_plot
 
     script:
     """
