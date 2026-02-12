@@ -13,7 +13,8 @@ process simulate_copula {
         tuple val(meta), path("${params.name_context_1}_simulated_data_${meta.id}.csv"), emit: file_context_1
         tuple val(meta), path("${params.name_context_2}_simulated_data_${meta.id}.csv"), emit: file_context_2
         tuple val(meta), path("meta_${meta.id}.csv"), emit: file_meta
-        tuple val(meta), path("ground_truth_simulated_data_${meta.id}.txt"), emit: file_ground_truth
+        tuple val(meta), path("ground_truth_simulated_nodes_${meta.id}.txt"), emit: file_ground_truth_nodes
+        tuple val(meta), path("ground_truth_simulated_edges_${meta.id}.txt"), emit: file_ground_truth_edges
     
     script:
     """
@@ -41,7 +42,7 @@ process simulate_copula {
             --n_both_bi_cont "${params.simulation.n_both_bi_cont}" \
             --shift "${params.simulation.shift}" \
             --corr ${params.simulation.corr} \
-            --output_suffix "_${meta.id}"
+            --output_suffix "${meta.id}"
     """
     
 }

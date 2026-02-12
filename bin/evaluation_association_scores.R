@@ -202,7 +202,7 @@ statistical_tests <-   c("pearson"="Pearson",
 
 
 ######## ------------- Argument parser ------------- ########
-parser <- ArgumentParser(description='AUC Heatmap Generator')
+parser <- ArgumentParser(description='Association Scores Point Plots')
 parser$add_argument('summary_file', 
                      help='Input summary data file storing all generated configurations and their results.')
 parser$add_argument('data_type', help = 'Type of data: simulation or real')
@@ -218,7 +218,7 @@ name_context_2 <- args$name_context_2
 ######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
-summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2", "ground_truth_file")])
+summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2", "ground_truth_nodes")])
 
 
 if (data_type == 'simulation'){
@@ -226,7 +226,7 @@ if (data_type == 'simulation'){
   
   for (i in unique(summary_dt$id)){
     # Get paths
-    gt_path <- summary_dt[id == i, ground_truth_file]
+    gt_path <- summary_dt[id == i, ground_truth_nodes]
     scores1 <- summary_dt[id == i, network_context_1]
     scores2 <- summary_dt[id == i, network_context_2]
     

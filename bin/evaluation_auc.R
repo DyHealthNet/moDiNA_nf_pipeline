@@ -13,8 +13,12 @@ calculate_AUC_per_simulation <- function(ranking, ground_truth, node_ranking = T
   ranking <- ranking[order(rank)]
   
   # Vector of labels (1 for GT nodes, 0 for non-GT nodes)
-  ranking[, is_ground_truth := ifelse(node %in% ground_truth$node, 1, 0)]
-  
+  if(node_ranking){
+    ranking[, is_ground_truth := ifelse(node %in% ground_truth$node, 1, 0)]
+  } else {
+    ranking[, is_ground_truth := ifelse(node %in% ground_truth$edge, 1, 0)]
+  }
+
   # Calculate AUC
   roc_obj <- roc(ranking$is_ground_truth, ranking$rank, quiet = TRUE)
   return(auc(roc_obj))
@@ -24,7 +28,7 @@ calculate_AUC_for_row <- function(ground_truth_file, ranking_file, row_num, node
   tryCatch({
     ground_truth <- fread(ground_truth_file)
     ranking <- fread(ranking_file)
-    return(calculate_AUC_per_simulation(ranking, ground_truth))
+    return(calculate_AUC_per_simulation(ranking, ground_truth, node_ranking))
   }, error = function(e) {
     cat("\n=== ERROR in row", row_num, "===\n")
     cat("Ground truth file:", ground_truth_file, "\n")
@@ -34,6 +38,7 @@ calculate_AUC_for_row <- function(ground_truth_file, ranking_file, row_num, node
     return(NA)
   })
 }
+
 
 node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "None")
 node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
@@ -52,7 +57,6 @@ args <- parser$parse_args()
 summary_file <- args$summary_file
 
 ######## ------------- Process data ------------- ########
-######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
 # Store edge ranking independently
@@ -63,18 +67,30 @@ summary_dt <- summary_dt[summary_dt$algorithm != "direct_edge",]
 
 # Calculate AUC for each row with row number tracking
 summary_dt[, auc := mapply(calculate_AUC_for_row, 
-                           ground_truth_file, 
+                           ground_truth_nodes, 
                            ranking_file,
                            row_num = .I,  # Pass row index
                            SIMPLIFY = TRUE)]
 
+if (nrow(edge_ranking_dt) > 0) {
+  edge_ranking_dt[, auc := mapply(calculate_AUC_for_row, 
+                                  ground_truth_edges, 
+                                  ranking_file,
+                                  node_ranking = FALSE,
+                                  row_num = .I,  # Pass row index
+                                  SIMPLIFY = TRUE)]
+  
+  summary_dt <- rbind(summary_dt, edge_ranking_dt)
+}
+
 # Replace names
 summary_dt[algorithm == "direct_node", algorithm := "Direct Node"]
+summary_dt[algorithm == "direct_edge", algorithm := "Direct Edge"]
 summary_dt[node_metric == "", node_metric := "None"]
 summary_dt[edge_metric == "", edge_metric := "None"]
 
 # Level algorithms
-summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "Direct Node"))
+summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "Direct Node", "Direct Edge"))
 
 # Group by configuration and calculate mean/sd AUC
 results <- summary_dt[, .(
@@ -106,8 +122,8 @@ p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
     strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5)
   )
 
-ggsave("overall_heatmap_auc.png", width = 8, height = 10, dpi = 300, bg = "white")
-  
+ggsave("overall_heatmap_auc.png", width = 8, height = 10, dpi = 300)
+
 for(al in unique(results$algorithm)){
   print(paste0("Algorithm: ", al))
   dt <- results[results$algorithm == al,]
@@ -117,9 +133,10 @@ for(al in unique(results$algorithm)){
     geom_errorbar(aes(xmin = mean_auc - sd_auc, xmax = mean_auc + sd_auc), 
                   position = position_dodge(0.9), width = 0.5) +
     labs(x = "Mean AUC", y = "Node Metric", fill = "Edge Metric") +
-    theme_bw() +
+    theme_minimal() +
     ggtitle(al)+
     theme(
+      panel.grid = element_blank(),
       panel.spacing.x = unit(1, 'lines'),
       axis.text.x = element_text(size = 10),
       axis.text.y = element_text(size = 10),
@@ -131,16 +148,17 @@ for(al in unique(results$algorithm)){
       plot.title = element_text(size = 12, hjust = 0.5) 
     ) +
     scale_fill_manual(values = edge_metrics_colors)
-  ggsave(paste0("barplot_auc_algorithm_", al, "_edge_metrics_colored.png"), width = 8, height = 5, dpi = 300, bg = "white")
+  ggsave(paste0("barplot_auc_algorithm_", al, "_edge_metrics_colored.png"), width = 8, height = 5, dpi = 300)
 
   ggplot(dt, aes(y = edge_metric, x = mean_auc, fill = node_metric)) +
     geom_bar(stat = "identity", position = position_dodge(0.9)) +
     geom_errorbar(aes(xmin = mean_auc - sd_auc, xmax = mean_auc + sd_auc), 
                   position = position_dodge(0.9), width = 0.5) +
     labs(x = "Mean AUC", y = "Edge Metric", fill = "Node Metric") +
-    theme_bw() +
+    theme_minimal() +
     ggtitle(al)+
     theme(
+      panel.grid = element_blank(),
       panel.spacing.x = unit(1, 'lines'),
       axis.text.x = element_text(size = 10),
       axis.text.y = element_text(size = 10),
@@ -152,27 +170,7 @@ for(al in unique(results$algorithm)){
       plot.title = element_text(size = 12, hjust = 0.5) 
     ) +
     scale_fill_manual(values = node_metrics_colors)
-  ggsave(paste0("barplot_auc_algorithm_", al, "_node_metrics_colored.png"), width = 8, height = 5, dpi = 300, bg = "white")
+  ggsave(paste0("barplot_auc_algorithm_", al, "_node_metrics_colored.png"), width = 8, height = 5, dpi = 300)
   
   
 }
-
-
-# Plot edge ranking
-
-#edge_ranking_dt <- edge_ranking_dt[algorithm == "direct_edge",]
-
-#if (nrow(edge_ranking_dt) > 0) {
-  # Calculate AUC for each row with row number tracking
-#  edge_ranking_dt[, auc := mapply(calculate_AUC_for_row, 
-#                                  ground_truth_file, 
-#                                  ranking_file,
-#                                  row_num = .I,  # Pass row index
-#                                  node_ranking = FALSE,
-#                                  SIMPLIFY = TRUE)]
-  
-  
-  
-
- # }
-

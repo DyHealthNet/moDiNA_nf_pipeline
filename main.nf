@@ -29,14 +29,16 @@ workflow {
         file_context_1 = simulate_copula.out.file_context_1
         file_context_2 = simulate_copula.out.file_context_2
         file_meta = simulate_copula.out.file_meta
-        file_ground_truth = simulate_copula.out.file_ground_truth
+        file_ground_truth_nodes = simulate_copula.out.file_ground_truth_nodes
+        file_ground_truth_edges = simulate_copula.out.file_ground_truth_edges
     } else {
         // Use real-world data from params (single iteration)
         sim_iterations = Channel.of([id: 1])
         file_context_1 = sim_iterations.map { meta -> [meta, file(params.real_world_data.path_context_1)] }
         file_context_2 = sim_iterations.map { meta -> [meta, file(params.real_world_data.path_context_2)] }
         file_meta = sim_iterations.map { meta -> [meta, file(params.real_world_data.path_meta)] }
-        file_ground_truth = Channel.empty()  // This is fine - empty channel of tuples
+        file_ground_truth_nodes = Channel.empty()  // This is fine - empty channel of tuples
+        file_ground_truth_edges = Channel.empty()  // This is fine - empty channel of tuples
     }
     
     // ----------- Context-specific network inference -----------
@@ -136,20 +138,27 @@ workflow {
     if(params.data_type == "simulation"){
         // Add ground truth files by matching meta.id
         summary_data = summary_data
-        .combine(file_ground_truth)
-        .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt, gt_file ->
-            id == meta_gt.id
-        }
-        .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt, gt_file ->
-            [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file]
-        }
+            .combine(file_ground_truth_nodes)
+            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt_nodes, gt_file_nodes ->
+                id == meta_gt_nodes.id
+            }
+            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt_nodes, gt_file_nodes ->
+                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes]
+            }
+            .combine(file_ground_truth_edges)
+            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, meta_gt_edges, gt_file_edges ->
+                id == meta_gt_edges.id
+            }
+            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, meta_gt_edges, gt_file_edges ->
+                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, gt_file_edges]
+            }
     }     
 
     // Write .csv file
     summary_file = summary_data
         .map { row ->
             if(params.data_type == "simulation"){
-                "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]},${row[9]}"
+                "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]},${row[9]},${row[10]}"
             } else {
                 "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]}"
             }
@@ -157,7 +166,7 @@ workflow {
         .collect()
         .map { lines ->
             def header = params.data_type == "simulation" ? 
-                "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,ground_truth_file" : 
+                "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,ground_truth_nodes,ground_truth_edges" : 
                 "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2"
             def content = [header] + lines
             content.join("\n")

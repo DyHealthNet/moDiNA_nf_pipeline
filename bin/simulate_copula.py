@@ -101,8 +101,9 @@ if __name__ == '__main__':
                            corr =args.corr)
     
     # Write output files
-    context1.to_csv(f'{args.context_1}_simulated_data{args.output_suffix}.csv', index=False)
-    context2.to_csv(f'{args.context_2}_simulated_data{args.output_suffix}.csv', index=False)
-    meta.to_csv(f'meta{args.output_suffix}.csv', index=False)
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_data{args.output_suffix}.txt')
+    context1.to_csv(f'{args.context_1}_simulated_data_{args.output_suffix}.csv', index=False)
+    context2.to_csv(f'{args.context_2}_simulated_data_{args.output_suffix}.csv', index=False)
+    meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node')
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge')
     

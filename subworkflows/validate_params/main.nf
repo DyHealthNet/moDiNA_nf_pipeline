@@ -52,7 +52,7 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
 }
 
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
+    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E', 'None']
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -62,7 +62,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
+    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -279,8 +279,6 @@ workflow validate_params {
                         validateNodeMetric(node_metric)
                         validateEdgeMetric(edge_metric)
                         validateRankingAlgorithm(algo)
-
-                        // TODO: check for invalid combinations
                         
                         configs << [node_metric, edge_metric, algo]
                     }
@@ -299,21 +297,6 @@ workflow validate_params {
     }
 
     // Validate additional differential network analysis parameters
-    
-    // Check if any configuration uses STC
-    def uses_stc = configs.any { node_metric, edge_metric, ranking_algo ->
-        node_metric == 'STC'
-    }
-    
-    if (uses_stc) {
-        if (!params.diff_net_analysis.stc_test || params.diff_net_analysis.stc_test == '') {
-            error "ERROR: Parameter 'diff_net_analysis.stc_test' must be provided when using STC as node_metric or edge_metric"
-        }
-        def valid_stc_tests = ['mwu', 'ttest']
-        if (!valid_stc_tests.contains(params.diff_net_analysis.stc_test)) {
-            error "ERROR: Parameter 'diff_net_analysis.stc_test' must be one of: ${valid_stc_tests.join(', ')}"
-        }
-    }
 
     // Check if any configuration uses int-IS
     def uses_int_is = configs.any { node_metric, edge_metric, ranking_algo ->

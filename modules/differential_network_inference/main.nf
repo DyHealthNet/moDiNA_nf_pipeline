@@ -21,10 +21,10 @@ process differential_network_inference {
             --context_file_2 "${file_context_2}" \
             --node_metric "${meta.node_metric}" \
             --edge_metric "${meta.edge_metric}" \
-            ${params.diff_net_analysis.stc_test ? "--stc_test ${params.diff_net_analysis.stc_test}" : ""} \
             ${params.diff_net_analysis.max_path_length ? "--max_path_length ${params.diff_net_analysis.max_path_length}" : ""} \
             --multiple_testing "${params.diff_net_analysis.multiple_testing}" \
-            --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}" 
+            --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}" \
+            --meta-file "${file_meta}"
     """
     
 }
