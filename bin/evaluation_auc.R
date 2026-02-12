@@ -108,7 +108,7 @@ p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
   geom_text(aes(label = sprintf('%.2f', mean_auc)), size = 3) +
   facet_grid(algorithm~., scales = "free", space = "free") +
   labs(x = "Edge Metric", y = "Node Metric", fill = "Mean AUC") +
-  scale_fill_gradient(low = 'white', high = '#C03830', name = 'AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0.4, 1.0)) +
+  scale_fill_gradient(low = 'white', high = '#a32e28', name = 'AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0, 1.0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),
@@ -122,7 +122,16 @@ p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
     strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5)
   )
 
-ggsave("overall_heatmap_auc.png", width = 8, height = 10, dpi = 300)
+# Calculate dynamic plot dimensions based on unique metrics
+n_node_metrics <- length(unique(results$node_metric))
+n_edge_metrics <- length(unique(results$edge_metric))
+n_algorithms <- length(unique(results$algorithm))
+
+# Dynamic sizing for heatmap
+heatmap_width <- min(8, 0.85 * n_edge_metrics)
+heatmap_height <- min(10, 0.7 * n_node_metrics * n_algorithms)
+
+ggsave("overall_heatmap_auc.png", width = heatmap_width, height = heatmap_height, dpi = 300)
 
 for(al in unique(results$algorithm)){
   print(paste0("Algorithm: ", al))
