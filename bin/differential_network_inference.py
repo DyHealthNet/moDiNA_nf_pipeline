@@ -31,8 +31,6 @@ if __name__ == '__main__':
                         help='Edge-level metric to compute (e.g., weight, correlation)')
     
     # Statistical testing parameters
-    parser.add_argument('--stc_test', type=str, required=False,
-                        help='Statistical test to use for comparing contexts (e.g., t-test, wilcoxon, permutation)')
     parser.add_argument('--max_path_length', type=int, required=False,
                         help='Maximum path length for network analysis')
     parser.add_argument('--multiple_testing', type=str, required=True,
@@ -43,6 +41,10 @@ if __name__ == '__main__':
     parser.add_argument('--output_prefix', type=str, required=True,
                         help='Prefix for output files')
     
+    # Meta File
+    parser.add_argument('--meta-file', type=str, required=True,
+                        help='Path to meta file storing the data types of input data.')
+    
     args = parser.parse_args()
     
     # Read networks and input data
@@ -50,12 +52,6 @@ if __name__ == '__main__':
     scores2 = pd.read_csv(args.network_context_2)
     data1 = pd.read_csv(args.context_file_1)
     data2 = pd.read_csv(args.context_file_2)
-    
-    # Check if stc_test and max_path_length are provided when needed
-    if args.stc_test is None:
-        stc_test = 'mwu'
-    else:
-        stc_test = args.stc_test
     
     if args.max_path_length is None:
         max_path_length = 2
@@ -72,6 +68,8 @@ if __name__ == '__main__':
     else:
         edge_metric = args.edge_metric
         
+    meta = pd.read_csv(args.meta_file)
+        
     
     # Perform differential network analysis
     edges_diff, nodes_diff = modina.compute_diff_network(
@@ -81,9 +79,9 @@ if __name__ == '__main__':
         context2=data2,
         node_metric=node_metric,
         edge_metric=edge_metric,
-        stc_test=stc_test,
         max_path_length=max_path_length,
-        correction=args.multiple_testing    
+        correction=args.multiple_testing,
+        meta_file = meta    
     )
     
     if nodes_diff is None:
@@ -95,8 +93,8 @@ if __name__ == '__main__':
         print("No edge metrics calculated.")
         edges_diff = pd.DataFrame()
  
-    nodes_diff.to_csv(f'{args.output_prefix}_node_metrics.csv', index=True)
-    edges_diff.to_csv(f'{args.output_prefix}_edge_metrics.csv', index=False)
+    nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)
+    edges_diff.to_csv(f'{args.output_prefix}_{edge_metric}_edge_metrics.csv', index=False)
 
     print("Differential network analysis completed successfully")
 
