@@ -13,6 +13,7 @@ dag*.svg
 results/
 output/
 out/
+out_*/
 
 # Logs
 *.log

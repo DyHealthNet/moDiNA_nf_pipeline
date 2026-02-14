@@ -127,11 +127,8 @@ n_node_metrics <- length(unique(results$node_metric))
 n_edge_metrics <- length(unique(results$edge_metric))
 n_algorithms <- length(unique(results$algorithm))
 
-# Dynamic sizing for heatmap
-heatmap_width <- min(8, 0.85 * n_edge_metrics)
-heatmap_height <- min(10, 0.7 * n_node_metrics * n_algorithms)
 
-ggsave("overall_heatmap_auc.png", width = heatmap_width, height = heatmap_height, dpi = 300)
+ggsave("overall_heatmap_auc.png", width = 10, height = 8, dpi = 300)
 
 for(al in unique(results$algorithm)){
   print(paste0("Algorithm: ", al))

@@ -4,12 +4,14 @@ include {simulate_copula} from './modules/simulate_copula/main.nf'
 include {validate_params} from './subworkflows/validate_params/main.nf'
 include {context_network_inference} from './modules/context_network_inference/main.nf'
 include {filter_context_networks} from './modules/filter_context_networks/main.nf'
-include {differential_network_inference} from './modules/differential_network_inference/main.nf'
+include {differential_node_inference} from './modules/differential_node_inference/main.nf'
+include {differential_edge_inference} from './modules/differential_edge_inference/main.nf'
+include {rescaling_networks} from './modules/rescaling_networks/main.nf'
 include {node_edge_ranking} from './modules/node_edge_ranking/main.nf'
 include {evaluation_auc} from './modules/evaluation_auc/main.nf'
 include {evaluation_association_scores} from './modules/evaluation_association_scores/main.nf'
 include {evaluation_differential_scores} from './modules/evaluation_differential_scores/main.nf'
-
+include {create_summary_file} from './modules/create_summary_file/main.nf'
 
 workflow {
 
@@ -70,11 +72,21 @@ workflow {
         .filter { meta, file -> meta.context == params.name_context_2 }
         .map { meta, file -> [meta.subMap('id'), file] }
 
+
+    // ----------- Rescaling of association scores -----------
+    rescaling_input = network_context_1.combine(network_context_2)
+        .filter { meta1, net1, meta2, net2 -> meta1.id == meta2.id }
+        .map { meta1, net1, meta2, net2 -> [meta1, net1, net2] }
+    rescaling_networks(rescaling_input)
+
+    rescaled_network_context_1 = rescaling_networks.out.rescaled_network_context_1
+    rescaled_network_context_2 = rescaling_networks.out.rescaled_network_context_2
+
     // ----------- Filtering of context-specific networks (optional) -----------
     if (params.diff_net_analysis.filter_method) {
         // Join all inputs by meta.id
-        filter_input = network_context_1
-            .join(network_context_2, by: 0)
+        filter_input = rescaled_network_context_1
+            .join(rescaled_network_context_2, by: 0)
             .join(file_context_1, by: 0)
             .join(file_context_2, by: 0)
             .map { meta, net1, net2, ctx1, ctx2 ->
@@ -83,40 +95,49 @@ workflow {
         
         filter_context_networks(filter_input)
         // These reassignments are correct - they maintain [meta, file] structure
-        network_context_1 = filter_context_networks.out.filtered_network_context_1
-        network_context_2 = filter_context_networks.out.filtered_network_context_2
+        rescaled_network_context_1 = filter_context_networks.out.filtered_network_context_1
+        rescaled_network_context_2 = filter_context_networks.out.filtered_network_context_2
         file_context_1 = filter_context_networks.out.filtered_input_context_1
         file_context_2 = filter_context_networks.out.filtered_input_context_2
     }
 
     // ----------- Differential network creation -----------
     // Join all files by meta.id first, then combine with metric pairs
-    joined_files = network_context_1
-        .join(network_context_2, by: 0)
+    joined_files = rescaled_network_context_1
+        .join(rescaled_network_context_2, by: 0)
         .join(file_context_1, by: 0)
         .join(file_context_2, by: 0)
         .join(file_meta, by: 0)
         // Result: [meta, net1, net2, ctx1, ctx2, meta_file]
     
-    // Combine with metric pairs to create all configurations
-    diff_net_input = validate_params.out.metric_pairs
+    // Combine with unique node_metrics to create all configurations for node inference
+    diff_node_input = validate_params.out.node_metrics
         .combine(joined_files)
-        .map { node_m, edge_m, meta, net1, net2, ctx1, ctx2, meta_file ->
-            [meta + [node_metric: node_m, edge_metric: edge_m], net1, net2, ctx1, ctx2, meta_file]
+        .map { node_m, meta, net1, net2, ctx1, ctx2, meta_file ->
+            [meta + [node_metric: node_m], net1, net2, ctx1, ctx2, meta_file]
         }
     
-    differential_network_inference(diff_net_input)
+    differential_node_inference(diff_node_input)
+
+    // Combine with unique edge_metrics to create all configurations for edge inference
+    diff_edge_input = validate_params.out.edge_metrics
+        .combine(joined_files)
+        .map { edge_m, meta, net1, net2, ctx1, ctx2, file_meta ->
+            [meta + [edge_metric: edge_m], net1, net2]
+        }
+    
+    differential_edge_inference(diff_edge_input)
 
     // ----------- Ranking nodes / edges -----------
     // Combine all algorithm configs with differential network results
-    // Filter to match only configurations with same node/edge metrics
     ranking_input = validate_params.out.config_combs
-        .combine(differential_network_inference.out)
-        .filter { node_m, edge_m, algo, meta, node_file, edge_file, meta_file ->
-            node_m == meta.node_metric && edge_m == meta.edge_metric
+        .combine(differential_node_inference.out.node_metrics)
+        .combine(differential_edge_inference.out.edge_metrics)
+        .filter { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge,edge_file ->
+            node_m == meta_node.node_metric && edge_m == meta_edge.edge_metric && meta_node.id == meta_edge.id
         }
-        .map { node_m, edge_m, algo, meta, node_file, edge_file, meta_file ->
-            [meta + [algorithm: algo], node_file, edge_file, meta_file]
+        .map { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file ->
+            [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, file_meta]
         }
     
     node_edge_ranking(ranking_input)
@@ -156,32 +177,18 @@ workflow {
             }
     }     
 
-    // Write .csv file
-    summary_file = summary_data
-        .map { row ->
-            if(params.data_type == "simulation"){
-                "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]},${row[9]},${row[10]}"
-            } else {
-                "${row[0]},${row[1]},${row[2]},${row[3]},${row[4]},${row[5]},${row[6]},${row[7]},${row[8]}"
-            }
-        }
-        .collect()
-        .map { lines ->
-            def header = params.data_type == "simulation" ? 
-                "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,ground_truth_nodes,ground_truth_edges" : 
-                "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2"
-            def content = [header] + lines
-            content.join("\n")
-        }
-        .collectFile(name: 'summary.csv', storeDir: params.out_dir)
+    // Write summary.csv
+    // COLLECT THE CHANNEL INTO A LIST
+    summary_data_collected = summary_data.collect()
+    create_summary_file(summary_data_collected)
 
     // Evaluation
 
     if (params.data_type == 'simulation') {
-        evaluation_auc(summary_file)
-        evaluation_association_scores(summary_file)
-        evaluation_differential_scores(summary_file)
+        evaluation_auc(create_summary_file.out.summary_csv)
+        evaluation_association_scores(create_summary_file.out.summary_csv)
+        evaluation_differential_scores(create_summary_file.out.summary_csv)
     }
 
-
+    
 }
