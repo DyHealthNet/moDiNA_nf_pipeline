@@ -348,8 +348,12 @@ workflow validate_params {
     log.info "✓ All context-specific network inference parameters are valid"
 
     // Extract unique (node_metric, edge_metric) pairs from configs
-    def unique_metric_pairs = configs.collect { node_metric, edge_metric, ranking_algo ->
-        [node_metric, edge_metric]
+    def unique_node_metrics = configs.collect { node_metric, edge_metric, ranking_algo ->
+        [node_metric]
+    }.unique()
+
+    def unique_edge_metrics = configs.collect { node_metric, edge_metric, ranking_algo ->
+        [edge_metric]
     }.unique()
 
 
@@ -357,5 +361,7 @@ workflow validate_params {
     
     emit:
     config_combs = Channel.fromList(configs)
-    metric_pairs = Channel.fromList(unique_metric_pairs)
+    node_metrics = Channel.fromList(unique_node_metrics).flatten()
+    edge_metrics = Channel.fromList(unique_edge_metrics).flatten()
+
 }

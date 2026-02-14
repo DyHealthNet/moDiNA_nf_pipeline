@@ -42,7 +42,7 @@ if __name__ == '__main__':
         nodes_diff = None
 
     try:
-        edges_diff = pd.read_csv(args.edge_metric_file)
+        edges_diff = pd.read_csv(args.edge_metric_file, index_col=0)
     except pd.errors.EmptyDataError:
         edges_diff = None
     if edges_diff is not None and edges_diff.empty:

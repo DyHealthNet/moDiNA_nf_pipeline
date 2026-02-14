@@ -1,5 +1,5 @@
 process filter_context_networks {
-    publishDir "${params.out_dir}/context_network_inference", mode: 'copy'
+    publishDir "${params.out_dir}/filtered_context_networks", mode: 'copy'
 
     cpus 8
     memory '32 GB'

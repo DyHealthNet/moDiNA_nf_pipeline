@@ -1,11 +1,5 @@
 node_metric,edge_metric,ranking_algorithm
-STC,pre-CS,PageRank+
-STC,post-CS,PageRank+
-STC,post-LS,PageRank+
-STC,pre-LS,PageRank+
 STC,pre-CS,direct_node
-STC,pre-CS,PageRank
-STC,post-CS,PageRank+
 STC,post-CS,direct_node
 None,post-CS,direct_edge
 None,post-LS,direct_edge
