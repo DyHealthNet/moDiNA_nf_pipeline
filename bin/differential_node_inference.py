@@ -72,6 +72,8 @@ if __name__ == '__main__':
             correction=args.multiple_testing,
             meta_file = meta    
         )
+        
+        nodes_diff = nodes_diff[[node_metric]]
             
     nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)
 
