@@ -52,7 +52,7 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
 }
 
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E', 'None']
+    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'None'] // Note: PRC-E include again
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -241,7 +241,7 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
+        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P'] // Note: PRC-E include again
         def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
     
@@ -324,17 +324,17 @@ workflow validate_params {
         }
     }
 
-    if (params.diff_net_analysis.cat_cont_b) {
+    if (params.diff_net_analysis.bi_cont) {
         def valid_cat_cont_b = ['ttest', 'anova', 'kruskal', 'mwu']
-        if (!valid_cat_cont_b.contains(params.diff_net_analysis.cat_cont_b)) {
-            error "ERROR: Parameter 'diff_net_analysis.cat_cont_b' must be one of: ${valid_cat_cont_b.join(', ')}"
+        if (!valid_cat_cont_b.contains(params.diff_net_analysis.bi_cont)) {
+            error "ERROR: Parameter 'diff_net_analysis.bi_cont' must be one of: ${valid_cat_cont_b.join(', ')}"
         }
     }
 
-    if (params.diff_net_analysis.cat_cont_m) {
+    if (params.diff_net_analysis.cont_cat) {
         def valid_cat_cont_m = ['kruskal', 'anova']
-        if (!valid_cat_cont_m.contains(params.diff_net_analysis.cat_cont_m)) {
-            error "ERROR: Parameter 'diff_net_analysis.cat_cont_m' must be one of: ${valid_cat_cont_m.join(', ')}"
+        if (!valid_cat_cont_m.contains(params.diff_net_analysis.cont_cat)) {
+            error "ERROR: Parameter 'diff_net_analysis.cont_cat' must be one of: ${valid_cat_cont_m.join(', ')}"
         }
     }
 

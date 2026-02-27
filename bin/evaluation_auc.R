@@ -108,7 +108,7 @@ p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
   geom_text(aes(label = sprintf('%.2f', mean_auc)), size = 3) +
   facet_grid(algorithm~., scales = "free", space = "free") +
   labs(x = "Edge Metric", y = "Node Metric", fill = "Mean AUC") +
-  scale_fill_gradient(low = 'white', high = '#a32e28', name = 'AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0, 1.0)) +
+  scale_fill_gradient(low = 'white', high = '#a32e28', name = 'Mean AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0, 1.0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),

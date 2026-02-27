@@ -12,6 +12,7 @@ include {evaluation_auc} from './modules/evaluation_auc/main.nf'
 include {evaluation_association_scores} from './modules/evaluation_association_scores/main.nf'
 include {evaluation_differential_scores} from './modules/evaluation_differential_scores/main.nf'
 include {create_summary_file} from './modules/create_summary_file/main.nf'
+include {snapshot_parameters} from './subworkflows/snapshot_parameters/main.nf'
 
 workflow {
 
@@ -190,5 +191,6 @@ workflow {
         evaluation_differential_scores(create_summary_file.out.summary_csv)
     }
 
+    snapshot_parameters()
     
 }

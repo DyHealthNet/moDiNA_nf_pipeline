@@ -224,7 +224,7 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
     
   ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
 
   
   # Node metrics
@@ -286,7 +286,7 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
   } else if (data_type == 'real'){
     
@@ -343,7 +343,7 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
   # Node metrics
   summary_dt_node_metrics <- unique(summary_dt[, c("id", "node_metric", "node_metrics_file", "ground_truth_nodes")])
@@ -395,6 +395,6 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
 }
