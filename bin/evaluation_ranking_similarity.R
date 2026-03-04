@@ -1,8 +1,6 @@
 #!/usr/bin/env Rscript
 
 ######## ------------- Libraries ------------- ########
-.libPaths("/nfs/home/students/a.raithel/miniconda3/envs/modina_eval_env/lib/R/library")
-library(GGally)
 library(patchwork)
 library(ggplot2)
 library(dplyr)
@@ -24,7 +22,7 @@ ground_truth_palette <- c(
 )
 
 # Valid focus values
-edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
+edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
 algorithms_subset = c('direct_node', 'PageRank', 'PageRank+', 'DimontRank', 'absDimontRank')
 
@@ -71,7 +69,7 @@ corr_heatmap <- function(data){
   cor_heatmap <- ggplot(cor_df, aes(x = Method2, y = Method1, fill = Similarity)) +
     geom_tile(color="white") +
     geom_text(aes(label = sprintf("%.2f", Similarity)), size = 3) +
-    scale_fill_gradient(low = "white", high = "#C03830", name = "Spearman Correlation", limits = c(0, 1)) +
+    scale_fill_gradient2(low = "#08519C", mid = "white", high = "#C03830", name = "Spearman Correlation", limits = c(-1, 1), midpoint = 0) +
     theme_minimal() +
     theme(
       axis.text.x = element_text(angle=45, hjust=1),
@@ -152,7 +150,7 @@ rank_heatmap <- function(data, gt_dict){
     theme(legend.position = "right",
           panel.grid = element_blank(),
           axis.ticks = element_blank()
-  )
+    )
   
   return(annotated_heatmap)
 }
@@ -178,20 +176,27 @@ par_coord <- function(data, metric, gt_dict){
   ranking_cols <- setdiff(colnames(data),
                           c("node", "groundtruth", "description"))
   
-  columns = which(colnames(data) %in% ranking_cols)
+  # Reshape to long format
+  df_long <- data %>%
+    mutate(.id = row_number()) %>%
+    pivot_longer(cols = all_of(ranking_cols), names_to = "variable", values_to = "value") %>%
+    mutate(value = as.numeric(value))
+  
+  # Normalize using globalminmax
+  global_min <- min(df_long$value, na.rm = TRUE)
+  global_max <- max(df_long$value, na.rm = TRUE)
+  df_long <- df_long %>%
+    mutate(value = (value - global_min) / (global_max - global_min),
+           variable = factor(variable, levels = ranking_cols))
   
   # Plot
-  p <- ggparcoord(
-    data = data,
-    columns = columns,
-    groupColumn = 'description',
-    alphaLines = 1.0,
-    scale = "globalminmax"
-  ) +
-    labs(x='', y='Rank', color='Ground Truth') +
+  p <- ggplot(df_long, aes(x = variable, y = value, group = .id, color = description)) +
+    geom_line(alpha = 1.0) +
+    labs(x = '', y = 'Rank', color = 'Ground Truth') +
     scale_color_manual(values = ground_truth_palette) +
     theme_minimal() +
     theme(
+      legend.position = "bottom",
       axis.text.y  = element_text(size = 18),
       axis.title.y = element_text(size = 18),
       legend.text  = element_text(size = 18),
@@ -204,17 +209,16 @@ par_coord <- function(data, metric, gt_dict){
 
 ######## ------------- Argument parser ------------- ########
 
-#parser <- ArgumentParser(description='Ranking Similarity')
-#parser$add_argument('summary_file', 
-#                    help='Input summary data file storing all generated configurations and their results.')
-#parser$add_argument('data_type', help = 'Type of data: simulation or real')
-#args <- parser$parse_args()
+parser <- ArgumentParser(description='Ranking Similarity')
+parser$add_argument('summary_file', 
+                    help='Input summary data file storing all generated configurations and their results.')
+parser$add_argument('data_type', help = 'Type of data: simulation or real')
+args <- parser$parse_args()
 
-#summary_file <- args$summary_file
-#data_type <- args$data_type
+summary_file <- args$summary_file
+data_type <- args$data_type
 
-summary_file <- '/nfs/proj/a.raithel/thesis/data/nf_pipeline/out_file/summary.csv'
-data_type <- 'simulation'
+
 
 ######## ------------- Process data ------------- ########
 
@@ -232,9 +236,10 @@ for (sim in 1:simulations){
   node_rankings <- sim_summary[algorithm!='direct_edge', ]
   
   # Edge metrics
-  for (metric in edge_metrics_subset){
+  for (metric in unique(node_rankings$edge_metric)){
     # Filter for metric
     data <- node_rankings[edge_metric==metric, ]
+    
     if (nrow(data) < 2){
       next
     }
@@ -265,15 +270,16 @@ for (sim in 1:simulations){
       
       # Parallel coordinates plot
       parallel_coordinates <- par_coord(data = merged_data, metric = metric, gt_dict = gt_dict)
-      width = 1.5 * ncol(merged_data)
-      ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width)
+      width = max(1.5 * ncol(merged_data), 12)
+      ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width, height = 8)
     }
   }
   
   # Node metrics
-  for (metric in node_metrics_subset){
+  for (metric in unique(node_rankings$node_metric)){
     # Filter for metric
     data <- node_rankings[node_metric==metric, ]
+    
     if (nrow(data) < 2){
       next
     }
@@ -304,15 +310,16 @@ for (sim in 1:simulations){
       
       # Parallel coordinates plot
       parallel_coordinates <- par_coord(data = merged_data, metric = metric, gt_dict = gt_dict)
-      width = 1.5 * ncol(merged_data)
-      ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width)
+      width = max(1.5 * ncol(merged_data), 12)
+      ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width, height = 8)
     }
   }
   
   # Ranking algorithms
-  for (ranking_alg in algorithms_subset){
+  for (ranking_alg in unique(node_rankings$algorithm)){
     # Filter for metric
     data <- node_rankings[algorithm==ranking_alg, ]
+    
     if (nrow(data) < 2){
       next
     }
@@ -343,13 +350,9 @@ for (sim in 1:simulations){
       
       # Parallel coordinates plot
       parallel_coordinates <- par_coord(data = merged_data, metric = ranking_alg, gt_dict = gt_dict)
-      width = 1.5 * ncol(merged_data)
-      ggsave(paste0(sim, '_parallel_coordinates_', ranking_alg, '.png'), parallel_coordinates, width = width)
+      width = max(1.5 * ncol(merged_data), 12)
+      ggsave(paste0(sim, '_parallel_coordinates_', ranking_alg, '.png'), parallel_coordinates, width = width, height = 8)
     }
   }
   
 }
-
-
-
-

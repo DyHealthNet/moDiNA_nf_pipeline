@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
 ######## ------------- Libraries ------------- ########
-.libPaths("/nfs/home/students/a.raithel/miniconda3/envs/modina_eval_env/lib/R/library")
 library(patchwork)
 library(ggplot2)
 library(dplyr)
@@ -22,8 +21,8 @@ node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "No
 node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
 names(node_metrics_colors) <- node_metrics
 
-edge_metrics <- c("pre-CS", "post-CS", "pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
-edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
+edge_metrics <- c("pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
+edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
 names(edge_metrics_colors) <- edge_metrics
 
 algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'direct_node', 'direct_edge')
@@ -116,10 +115,8 @@ roc_curve <- function(data, variable_param, variable_colors){
     )
   
   # Color mapping
-  color_map <- auc_labels %>%
-    mutate(color = variable_colors[node_metric]) %>%
-    select(config_label, color) %>%
-    deframe()
+  unique_labels <- data_mean %>% pull({{variable_param}}) %>% unique() %>% as.character()
+  color_map <- variable_colors[unique_labels]
   
   # Plot
   p <- ggplot(data_mean, aes(x = fpr, y = mean_tpr, color = config_label, fill = config_label)) +
@@ -218,17 +215,12 @@ recall_and_enrichment <- function(data, variable_param, variable_colors, rank_of
 
 ######## ------------- Argument parser ------------- ########
 
-#parser <- ArgumentParser(description='Ranking Similarity')
-#parser$add_argument('summary_file', 
-#                    help='Input summary data file storing all generated configurations and their results.')
-#parser$add_argument('data_type', help = 'Type of data: simulation or real')
-#args <- parser$parse_args()
+parser <- ArgumentParser(description='Ranking Similarity')
+parser$add_argument('summary_file', 
+                    help='Input summary data file storing all generated configurations and their results.')
+args <- parser$parse_args()
 
-#summary_file <- args$summary_file
-#data_type <- args$data_type
-
-summary_file <- '/nfs/proj/a.raithel/thesis/data/nf_pipeline/out_file/summary.csv'
-data_type <- 'simulation'
+summary_file <- args$summary_file
 
 ######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)

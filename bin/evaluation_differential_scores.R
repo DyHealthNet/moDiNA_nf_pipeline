@@ -19,11 +19,6 @@ ground_truth_palette <- c(
   "non-ground truth"            = "lightgray"
 )
 
-
-# Create a darker ground truth palette
-ground_truth_palette_dark <- darken(ground_truth_palette, amount = 0.4)
-
-
 # Create dictionary for ground truth edges
 create_gt_edge_dict <- function(path, mode){
   gt_table <- fread(path)
@@ -78,7 +73,8 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
       
       # Extract scores and paths
       scores <- fread(config$scores)
-      gt_path = config$groundtruth
+      gt_path <- config$groundtruth
+      sim <- config$sim
       
       # Read ground truths
       gt_table <- fread(config$groundtruth)
@@ -100,9 +96,10 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
       # Map scores using the ground truth dictionary and add gt column to scores
       gt <- t(apply(scores, 1, get_gt_info, mode=mode, gt_dict=gt_dict))
       scores <- cbind(scores, as.data.frame(gt))
+      scores$sim <- sim
       
       # Collect all data
-      all_data[[i]] <- scores %>% select(all_of(metric), groundtruth, description)
+      all_data[[i]] <- scores %>% select(all_of(metric), groundtruth, description, sim)
     }
     
     # Combine all data
@@ -140,7 +137,7 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
 }
 
 # Valid metrics
-edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
+edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
 
 ######## ------------- Argument parser ------------- ########
@@ -183,7 +180,8 @@ if (data_type == 'simulation'){
       if (file.exists(scores)){
         configs <- c(configs, list(list(
           groundtruth = groundtruth,
-          scores = scores
+          scores = scores,
+          sim = i
         )))
       }
     }
@@ -195,9 +193,9 @@ if (data_type == 'simulation'){
   }
   
   # Plot edge jitter plot
-  edge_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description)) +
+  edge_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
     geom_jitter(
-      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,
+      size = 2,
       position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
     ) +
     facet_grid(metric ~ ., scales = "free_y") +
@@ -205,10 +203,10 @@ if (data_type == 'simulation'){
     labs(
       y = "Edge Value",
       x = "Ground Truth",
-      fill = "Ground Truth"
+      fill = "Ground Truth",
+      shape = "Simulation",
     ) +
-    scale_fill_manual(values = ground_truth_palette) +
-    scale_color_manual(values = ground_truth_palette_dark) +
+    scale_color_manual(values = ground_truth_palette) +
     theme_minimal() +
     theme(legend.position = "bottom", 
           panel.grid.major.x = element_blank(),
@@ -222,16 +220,16 @@ if (data_type == 'simulation'){
           legend.text = element_text(size=10),
           legend.title = element_text(size=12),
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
-    
+  
   ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
-
+         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  
   
   # Node metrics
   summary_dt_node_metrics <- unique(summary_dt[, c("id", "node_metric", "node_metrics_file", "ground_truth_nodes")])
   summary_dt_node_metrics <- summary_dt_node_metrics[node_metric %in% node_metrics_subset,]
   unique_node_metrics <- unique(summary_dt_node_metrics$node_metric) 
-  
+  all_plot_data <- list()
   for (metric in unique_node_metrics){
     configs = c()
     
@@ -244,7 +242,8 @@ if (data_type == 'simulation'){
       if (file.exists(scores)){
         configs <- c(configs, list(list(
           groundtruth = groundtruth,
-          scores = scores
+          scores = scores,
+          sim = i
         )))
       }
     }
@@ -254,12 +253,12 @@ if (data_type == 'simulation'){
     dt = diff_scores_jitter(configs, metric, mode='nodes', study='simulation')
     all_plot_data <- rbind(all_plot_data, dt)
   }
-
+  
   
   # Plot node jitter plot
-  node_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description)) +
+  node_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
     geom_jitter(
-      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,
+      size = 2,
       position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
     ) +
     facet_grid(metric ~ ., scales = "free_y") +
@@ -267,10 +266,10 @@ if (data_type == 'simulation'){
     labs(
       y = "Node Value",
       x = "Ground Truth",
-      fill = "Ground Truth"
+      fill = "Ground Truth",
+      shape = "Simulation"
     ) +
-    scale_fill_manual(values = ground_truth_palette) +
-    scale_color_manual(values = ground_truth_palette_dark) +
+    scale_color_manual(values = ground_truth_palette) +
     theme_minimal() +
     theme(legend.position = "bottom", 
           panel.grid.major.x = element_blank(),
@@ -286,10 +285,10 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
-  } else if (data_type == 'real'){
-    
+} else if (data_type == 'real'){
+  
   # Edge metrics
   all_plot_data <- list()
   
@@ -343,7 +342,7 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
   # Node metrics
   summary_dt_node_metrics <- unique(summary_dt[, c("id", "node_metric", "node_metrics_file", "ground_truth_nodes")])
@@ -395,6 +394,6 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)))
+         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
 }

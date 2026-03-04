@@ -9,10 +9,10 @@ process create_summary_file {
     
     script:
     def header = params.data_type == "simulation" ? 
-        "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,ground_truth_nodes,ground_truth_edges" : 
-        "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2"
+        "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,file_context_1,file_context_2,meta_file,ground_truth_nodes,ground_truth_edges" : 
+        "id,node_metric,edge_metric,algorithm,ranking_file,node_metrics_file,edge_metrics_file,network_context_1,network_context_2,file_context_1,file_context_2,meta_file"
     
-    def num_fields = params.data_type == "simulation" ? 11 : 9
+    def num_fields = params.data_type == "simulation" ? 14 : 12
     
     // Reshape flat list into rows
     def data = summary_data

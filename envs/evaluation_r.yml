@@ -12,3 +12,6 @@ dependencies:
   - r-dplyr
   - r-colorspace
   - r-patchwork
+  - r-purrr
+  - r-tidyr
+  - r-tibble

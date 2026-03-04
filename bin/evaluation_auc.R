@@ -44,8 +44,8 @@ node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "No
 node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
 names(node_metrics_colors) <- node_metrics
   
-edge_metrics <- c("pre-CS", "post-CS", "pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
-edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
+edge_metrics <- c("pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
+edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
 names(edge_metrics_colors) <- edge_metrics
 
 ######## ------------- Argument parser ------------- ########
@@ -108,7 +108,7 @@ p <- ggplot(results, aes(x = edge_metric, y = node_metric, fill = mean_auc)) +
   geom_text(aes(label = sprintf('%.2f', mean_auc)), size = 3) +
   facet_grid(algorithm~., scales = "free", space = "free") +
   labs(x = "Edge Metric", y = "Node Metric", fill = "Mean AUC") +
-  scale_fill_gradient(low = 'white', high = '#a32e28', name = 'AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0, 1.0)) +
+  scale_fill_gradient(low = 'white', high = '#a32e28', name = 'Mean AUC', guide = guide_colorbar(barwidth = 1.5, barheight = 10), limits = c(0, 1.0)) +
   theme_minimal() +
   theme(
     panel.grid = element_blank(),

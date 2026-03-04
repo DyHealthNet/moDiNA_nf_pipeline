@@ -12,6 +12,10 @@ include {evaluation_auc} from './modules/evaluation_auc/main.nf'
 include {evaluation_association_scores} from './modules/evaluation_association_scores/main.nf'
 include {evaluation_differential_scores} from './modules/evaluation_differential_scores/main.nf'
 include {create_summary_file} from './modules/create_summary_file/main.nf'
+include {snapshot_parameters} from './subworkflows/snapshot_parameters/main.nf'
+include {evaluation_roc_recall_enrichment} from './modules/evaluation_roc_recall_enrichment/main.nf'
+include {evaluation_ranking_similarity} from './modules/evaluation_ranking_similarity/main.nf'
+include {evaluation_mean_shifts} from './modules/evaluation_mean_shifts/main.nf'
 
 workflow {
 
@@ -142,7 +146,7 @@ workflow {
     
     node_edge_ranking(ranking_input)
 
-     // ----------- Create summary file -----------
+    // ----------- Create summary file -----------
     summary_data = node_edge_ranking.out
         .map { meta, node_metrics_file, edge_metrics_file, ranking_file  ->
             [meta, ranking_file, node_metrics_file, edge_metrics_file]
@@ -154,28 +158,32 @@ workflow {
         .combine(network_context_2)
         .filter { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2 ->
             meta_ranking.id == meta_network_2.id}
-        .map { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2 ->
-            [meta_ranking.id, meta_ranking.node_metric, meta_ranking.edge_metric, meta_ranking.algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2]
+        // Add file_context_1 and file_context_2 by matching meta.id
+        .combine(joined_files)
+        .filter { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2, meta_joined, net1_j, net2_j, ctx1, ctx2, meta_file ->
+            meta_ranking.id == meta_joined.id}
+        .map { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2, meta_joined, net1_j, net2_j, ctx1, ctx2, meta_file ->
+            [meta_ranking.id, meta_ranking.node_metric, meta_ranking.edge_metric, meta_ranking.algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file]
         }
 
     if(params.data_type == "simulation"){
         // Add ground truth files by matching meta.id
         summary_data = summary_data
             .combine(file_ground_truth_nodes)
-            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt_nodes, gt_file_nodes ->
+            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, meta_gt_nodes, gt_file_nodes ->
                 id == meta_gt_nodes.id
             }
-            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, meta_gt_nodes, gt_file_nodes ->
-                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes]
+            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, meta_gt_nodes, gt_file_nodes ->
+                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes]
             }
             .combine(file_ground_truth_edges)
-            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, meta_gt_edges, gt_file_edges ->
+            .filter {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes, meta_gt_edges, gt_file_edges ->
                 id == meta_gt_edges.id
             }
-            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, meta_gt_edges, gt_file_edges ->
-                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, gt_file_nodes, gt_file_edges]
+            .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes, meta_gt_edges, gt_file_edges ->
+                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes, gt_file_edges]
             }
-    }     
+    }
 
     // Write summary.csv
     // COLLECT THE CHANNEL INTO A LIST
@@ -184,11 +192,16 @@ workflow {
 
     // Evaluation
 
+    evaluation_association_scores(create_summary_file.out.summary_csv)
+    evaluation_differential_scores(create_summary_file.out.summary_csv)
+    evaluation_ranking_similarity(create_summary_file.out.summary_csv)
+    evaluation_mean_shifts(create_summary_file.out.summary_csv)
+
     if (params.data_type == 'simulation') {
         evaluation_auc(create_summary_file.out.summary_csv)
-        evaluation_association_scores(create_summary_file.out.summary_csv)
-        evaluation_differential_scores(create_summary_file.out.summary_csv)
+        //evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
     }
 
+    snapshot_parameters()
     
 }

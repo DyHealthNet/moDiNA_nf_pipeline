@@ -52,7 +52,7 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
 }
 
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E', 'None']
+    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'None'] // Note: PRC-E include again
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -62,7 +62,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
+    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -241,8 +241,8 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
-        def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'pre-CS', 'post-CS', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
+        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P'] // Note: PRC-E include again
+        def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
@@ -317,27 +317,13 @@ workflow validate_params {
 
 
     // Valide context network inference parameters
-    if (params.diff_net_analysis.cont_cont) {
-        def valid_cont_cont = ['pearson', 'spearman']
-        if (!valid_cont_cont.contains(params.diff_net_analysis.cont_cont)) {
-            error "ERROR: Parameter 'diff_net_analysis.cont_cont' must be one of: ${valid_cont_cont.join(', ')}"
+    if (params.diff_net_analysis.data_type) {
+        def valid_cont_cont = ['parametric', 'nonparametric']
+        if (!valid_cont_cont.contains(params.diff_net_analysis.data_type)) {
+            error "ERROR: Parameter 'diff_net_analysis.data_type' must be one of: ${valid_cont_cont.join(', ')}"
         }
     }
-
-    if (params.diff_net_analysis.cat_cont_b) {
-        def valid_cat_cont_b = ['ttest', 'anova', 'kruskal', 'mwu']
-        if (!valid_cat_cont_b.contains(params.diff_net_analysis.cat_cont_b)) {
-            error "ERROR: Parameter 'diff_net_analysis.cat_cont_b' must be one of: ${valid_cat_cont_b.join(', ')}"
-        }
-    }
-
-    if (params.diff_net_analysis.cat_cont_m) {
-        def valid_cat_cont_m = ['kruskal', 'anova']
-        if (!valid_cat_cont_m.contains(params.diff_net_analysis.cat_cont_m)) {
-            error "ERROR: Parameter 'diff_net_analysis.cat_cont_m' must be one of: ${valid_cat_cont_m.join(', ')}"
-        }
-    }
-
+    
     if (params.diff_net_analysis.multiple_testing) {
         def valid_multiple_testing = ['bh','by']
         if (!valid_multiple_testing.contains(params.diff_net_analysis.multiple_testing)) {
