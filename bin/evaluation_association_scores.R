@@ -119,7 +119,7 @@ assoc_scores_jitter <- function(scores, metric, data_type){
           color = "Ground Truth",
           shape = "Simulation"
         ) +
-        scale_color_manual(values = ground_truth_palette) + # Make circles a little darker
+        scale_color_manual(values = ground_truth_palette) + 
         theme_minimal() +
         theme(legend.position = "right", 
               panel.grid.major.x = element_blank(),

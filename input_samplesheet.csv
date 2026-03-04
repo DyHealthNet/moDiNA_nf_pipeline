@@ -1,5 +1,7 @@
 node_metric,edge_metric,ranking_algorithm
-STC,pre-CS,direct_node
-STC,post-CS,direct_node
-None,post-CS,direct_edge
+STC,pre-LS,direct_node
+DC-E,post-LS,direct_node
+DC-P,pre-P,direct_node
+PRC-P,post-P,direct_node
+None,post-LS,direct_edge
 None,post-LS,direct_edge
