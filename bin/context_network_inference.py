@@ -17,12 +17,8 @@ if __name__ == '__main__':
                         help='Path to metadata file containing label and type columns')
     
     # Statistical test parameters
-    parser.add_argument('--cont_cont', type=str, default='spearman',
-                        help='Test for continuous-continuous association scores')
-    parser.add_argument('--bi_cont', type=str, default='mann-whitney u',
-                        help='Test for categorical-continuous association (binary) scores')
-    parser.add_argument('--cont_cat', type=str, default='kruskal-wallis',
-                        help='Test for categorical-continuous association (multiple) scores')
+    parser.add_argument('--test_type', type=str, default='nonparametric',
+                        help='Test type for statistical association tests')
     parser.add_argument('--multiple_testing', type=str, default='bh',
                         help='Correction method for multiple testing')
     
@@ -42,9 +38,7 @@ if __name__ == '__main__':
     association_scores = modina.compute_context_scores(
         context_data=context_data,
         meta_file=meta_file,
-        cont_cont=args.cont_cont,
-        bi_cont=args.bi_cont,
-        cont_cat=args.cont_cat,
+        test_type=args.test_type,
         correction=args.multiple_testing,
         num_workers=args.num_workers,
     )
