@@ -107,15 +107,23 @@ roc_curve <- function(data, variable_param, variable_colors, subtitle=''){
       )
     )
   
+  auc_labels <- auc_labels %>%
+    arrange(desc(mean_auc))
+  
   data_mean <- data_mean %>%
     left_join(
       auc_labels %>% select({{variable_param}}, config_label),
       by = as_label(enquo(variable_param))
+    ) %>%
+    mutate(
+      config_label = factor(config_label, levels = auc_labels$config_label)
     )
   
   # Color mapping
-  unique_labels <- data_mean %>% pull({{variable_param}}) %>% unique() %>% as.character()
-  color_map <- variable_colors[unique_labels]
+  color_map <- auc_labels %>%
+    mutate(color = variable_colors[as.character({{variable_param}})]) %>%
+    select(config_label, color) %>%
+    deframe()
   
   # Plot
   p <- ggplot(data_mean, aes(x = fpr, y = mean_tpr, color = config_label, fill = config_label)) +
@@ -139,6 +147,9 @@ roc_curve <- function(data, variable_param, variable_colors, subtitle=''){
 
 # Create recall vs. rank plot
 recall_and_enrichment <- function(data, variable_param, variable_colors, rank_of_interest=10, subtitle=''){
+  # Set label order
+  label_order <- names(variable_colors)
+  
   data_long <- data %>%
     select(id, {{variable_param}}, tpr) %>%
     unnest(cols = c(tpr))
@@ -159,7 +170,15 @@ recall_and_enrichment <- function(data, variable_param, variable_colors, rank_of
     mutate(
       random_tpr = rank / max_rank,
       enrichment = tpr / random_tpr,
-      config_label = as.character({{variable_param}})
+    )
+  
+  # Change order
+  data_rank <- data_rank %>%
+    mutate(
+      config_label = factor(
+        as.character({{variable_param}}),
+        levels = label_order
+      )
     )
   
   # Average per rank
@@ -171,12 +190,17 @@ recall_and_enrichment <- function(data, variable_param, variable_colors, rank_of
       .groups = "drop"
     )
   
+  # Change order
   data_mean <- data_mean %>%
-    mutate(config_label = as.character({{variable_param}}))
+    mutate(
+      config_label = factor(
+        as.character({{variable_param}}),
+        levels = label_order
+      )
+    )
   
   # Color mapping
-  unique_labels <- unique(data_mean$config_label)
-  color_map <- variable_colors[unique_labels]
+  color_map <- variable_colors[label_order]
   
   # Plot
   p_recall <- ggplot(data_mean, aes(x = rank, y = mean_tpr, color = config_label, fill = config_label)) +
@@ -300,32 +324,43 @@ for(ranking_alg in algorithms) {
     }
     
     # Combine plots
-    combined_roc <- wrap_plots(roc_list, ncol = 1) +
-      plot_annotation(
-        title = paste0("ROC Curves – Ranking Algorithm: ", ranking_alg),
-        theme = theme(
-          plot.title = element_text(size = 16, face = "bold")
-        )
-      )
-    ggsave(paste0('ROC_curves_', ranking_alg, '_edge_metrics.png'), combined_roc, width = 6, height = 3 * length(roc_list))
+    cols <- ceiling(length(roc_list) / 4)
+    rows <- min(4, length(roc_list))
     
-    combined_recall <- wrap_plots(recall_list, ncol = 1) +
+    combined_roc <- wrap_plots(roc_list, ncol = cols) +
       plot_annotation(
-        title = paste0("Recall vs. Rank – Ranking Algorithm: ", ranking_alg),
+        title = paste0("Ranking Algorithm: ", ranking_alg),
         theme = theme(
           plot.title = element_text(size = 16, face = "bold")
         )
       )
-    ggsave(paste0('recall_curve_', ranking_alg, '_edge_metrics.png'), combined_recall, width = 6, height = 3 * length(recall_list))
+    ggsave(paste0('ROC_curves_', ranking_alg, '_edge_metrics.png'), combined_roc, width = 6 * cols, height = 3 * rows)
     
-    combined_enrichment <- wrap_plots(enrichment_list, ncol = 1) +
+    combined_recall <- wrap_plots(recall_list, ncol = cols) +
+      plot_layout(guides = "collect") +
       plot_annotation(
-        title = paste0("Enrichment – Ranking Algorithm: ", ranking_alg),
+        title = paste0("Ranking Algorithm: ", ranking_alg),
         theme = theme(
           plot.title = element_text(size = 16, face = "bold")
         )
+      ) &
+      theme(
+        legend.position = "bottom"
       )
-    ggsave(paste0('enrichment_boxplot_', ranking_alg, '_edge_metrics.png'), combined_enrichment, width = 1 + length(enrichment_list), height = 3 * length(enrichment_list))
+    ggsave(paste0('recall_curve_', ranking_alg, '_edge_metrics.png'), combined_recall, width = 6 * cols, height = 3 * rows)
+    
+    combined_enrichment <- wrap_plots(enrichment_list, ncol = cols) +
+      plot_layout(guides = "collect") +
+      plot_annotation(
+        title = paste0("Ranking Algorithm: ", ranking_alg),
+        theme = theme(
+          plot.title = element_text(size = 16, face = "bold")
+        )
+      ) &
+      theme(
+        legend.position = "bottom"
+      )
+    ggsave(paste0('enrichment_boxplot_', ranking_alg, '_edge_metrics.png'), combined_enrichment, width = cols * rows + 1, height = 3 * rows)
     
     
     roc_list <- list()
@@ -352,32 +387,43 @@ for(ranking_alg in algorithms) {
     }
     
     # Combine plots
+    cols <- ceiling(length(roc_list) / 4)
+    rows <- min(4, length(roc_list))
+    
     combined_roc <- wrap_plots(roc_list, ncol = 1) +
       plot_annotation(
-        title = paste0("ROC Curves – Ranking Algorithm: ", ranking_alg),
+        title = paste0("Ranking Algorithm: ", ranking_alg),
         theme = theme(
           plot.title = element_text(size = 16, face = "bold")
         )
       )
-    ggsave(paste0('ROC_curves_', ranking_alg, '_node_metrics.png'), combined_roc, width = 6, height = 3 * length(roc_list))
+    ggsave(paste0('ROC_curves_', ranking_alg, '_node_metrics.png'), combined_roc, width = 6 * cols, height = 3 * rows)
     
     combined_recall <- wrap_plots(recall_list, ncol = 1) +
+      plot_layout(guides = "collect") +
       plot_annotation(
-        title = paste0("Recall vs. Rank – Ranking Algorithm: ", ranking_alg),
+        title = paste0("Ranking Algorithm: ", ranking_alg),
         theme = theme(
           plot.title = element_text(size = 16, face = "bold")
         )
+      ) &
+      theme(
+        legend.position = "bottom"
       )
-    ggsave(paste0('recall_curve_', ranking_alg, '_node_metrics.png'), combined_recall, width = 6, height = 3 * length(recall_list))
+    ggsave(paste0('recall_curve_', ranking_alg, '_node_metrics.png'), combined_recall, width = 6 * cols, height = 3 * rows)
     
     combined_enrichment <- wrap_plots(enrichment_list, ncol = 1) +
+      plot_layout(guides = "collect") +
       plot_annotation(
-        title = paste0("Enrichment – Ranking Algorithm: ", ranking_alg),
+        title = paste0("Ranking Algorithm: ", ranking_alg),
         theme = theme(
           plot.title = element_text(size = 16, face = "bold")
-        )
+        ) 
+      ) &
+      theme(
+        legend.position = "bottom"
       )
-    ggsave(paste0('enrichment_boxplot_', ranking_alg, '_node_metrics.png'), combined_enrichment, width = 1 + length(enrichment_list), height = 3 * length(enrichment_list))
+    ggsave(paste0('enrichment_boxplot_', ranking_alg, '_node_metrics.png'), combined_enrichment, width = cols * rows + 1, height = 3 * rows)
   } else if (ranking_alg == 'direct_node'){
     roc <- roc_curve(data = data, variable_param = node_metric, variable_colors = node_metrics_colors) +
       labs(title = paste0("ROC Curve – Ranking Algorithm: ", ranking_alg)) +
