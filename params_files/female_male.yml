@@ -1,0 +1,23 @@
+name_context_1: "Female"
+name_context_2: "Male"
+run_type: "single"
+data_type: "real"
+out_dir: "/storage03/larend/SWATH_protein_differential_network_analysis/data/male_female_contexts/out/"
+
+real_world_data:
+  path_context_1: "/storage03/larend/SWATH_protein_differential_network_analysis/data/male_female_contexts/female_data.csv"
+  path_context_2: "/storage03/larend/SWATH_protein_differential_network_analysis/data/male_female_contexts/male_data.csv"
+  path_meta: "/storage03/larend/SWATH_protein_differential_network_analysis/data/metadata.csv"
+
+diff_net_analysis:
+  path_config: "input_samplesheet.csv"
+  edge_metric: "pre-P"
+  node_metric: "STC"
+  ranking_algorithm: "direct_node"
+  filter_method: ""
+  filter_param: 0
+  filter_metric: "pre-P"
+  filter_rule: "zero"
+  max_path_length: 2
+  test_type: "nonparametric"
+  multiple_testing: "bh"

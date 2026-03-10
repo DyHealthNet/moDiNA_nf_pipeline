@@ -1,8 +1,7 @@
 process rescaling_networks {
-    publishDir "${params.out_dir}/rescaled_networks", mode: 'copy'
+    conda params.conda_modina_env
 
-    cpus 8
-    memory '32 GB'
+    publishDir "${params.out_dir}/rescaled_networks", mode: 'copy'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}"
 

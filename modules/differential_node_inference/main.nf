@@ -1,8 +1,7 @@
 process differential_node_inference {
-    publishDir "${params.out_dir}/differential_node_inference", mode: 'copy'
+    conda params.conda_modina_env
 
-    cpus 8
-    memory '32 GB'
+    publishDir "${params.out_dir}/differential_node_inference", mode: 'copy'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}"
 
