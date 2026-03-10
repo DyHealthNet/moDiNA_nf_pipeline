@@ -1,8 +1,7 @@
 process simulate_copula {
-    publishDir "${params.out_dir}/copula_simulation", mode: 'copy'
+    conda params.conda_modina_env
 
-    cpus 8
-    memory '32 GB'
+    publishDir "${params.out_dir}/copula_simulation", mode: 'copy'
 
     when: params.data_type == 'simulation'
 

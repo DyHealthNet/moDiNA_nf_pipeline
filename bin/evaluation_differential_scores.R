@@ -116,14 +116,14 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
       config <- configs[[i]]
       
       # Extract scores
-      scores <- read_csv(config$scores)
+      scores <- fread(config$scores)
       
       if (mode == "nodes") {
         colnames(scores)[1] <- "node"
       }
       
       # Collect all data
-      all_data[[i]] <- scores %>% select(all_of(weight))
+      all_data[[i]] <- scores %>% select(all_of(metric))
     }
     
     # Combine all data
@@ -155,11 +155,9 @@ data_type <- args$data_type
 summary_dt <- fread(summary_file)
 simulations <- max(summary_dt$id, na.rm = TRUE)
 
-summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "node_metrics_file", "edge_metrics_file", "ground_truth_nodes")])
-
-
 # Plot differential scores  
 if (data_type == 'simulation'){
+  summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "node_metrics_file", "edge_metrics_file", "ground_truth_nodes")])
   
   # Edge metrics
   all_plot_data <- list()
@@ -289,10 +287,13 @@ if (data_type == 'simulation'){
   
 } else if (data_type == 'real'){
   
+  summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "node_metrics_file", "edge_metrics_file")])
+  
+  
   # Edge metrics
   all_plot_data <- list()
   
-  summary_dt_edge_metrics <- unique(summary_dt[, c("id", "edge_metric", "edge_metrics_file", "ground_truth_nodes")])
+  summary_dt_edge_metrics <- unique(summary_dt[, c("id", "edge_metric", "edge_metrics_file")])
   summary_dt_edge_metrics <- summary_dt_edge_metrics[edge_metric %in% edge_metrics_subset,]
   unique_edge_metrics <- unique(summary_dt_edge_metrics$edge_metric) 
   
@@ -320,19 +321,19 @@ if (data_type == 'simulation'){
   # Plot edge jitter plot
   edge_metrics_plot <- ggplot(all_plot_data, aes(x=1, y = value)) +
     geom_jitter(
-      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70",
-      position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
-    ) +
+      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70"
+    )+
     facet_grid(metric ~ ., scales = "free_y") +
     labs(
       y = "Edge Value",
+      x = ""
     ) +
     theme_minimal() +
     theme(legend.position = "bottom", 
           panel.grid.major.x = element_blank(),
-          axis.title.x = element_text(size = 12),  
+          axis.title.x = element_blank(),  
           axis.title.y = element_text(size = 12),
-          axis.text.x  = element_text(size = 10),
+          axis.text.x  = element_blank(),
           axis.text.y  = element_text(size = 10),
           strip.text = element_text(size = 12),
           panel.spacing.y = unit(1.7, "lines"),
@@ -342,10 +343,12 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+         edge_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
   # Node metrics
-  summary_dt_node_metrics <- unique(summary_dt[, c("id", "node_metric", "node_metrics_file", "ground_truth_nodes")])
+  all_plot_data <- list()
+  
+  summary_dt_node_metrics <- unique(summary_dt[, c("id", "node_metric", "node_metrics_file")])
   summary_dt_node_metrics <- summary_dt_node_metrics[node_metric %in% node_metrics_subset,]
   unique_node_metrics <- unique(summary_dt_node_metrics$node_metric) 
   
@@ -372,19 +375,19 @@ if (data_type == 'simulation'){
   
   node_metrics_plot <- ggplot(all_plot_data, aes(x=1, y = value)) +
     geom_jitter(
-      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70",
-      position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
+      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70"
     ) +
     facet_grid(metric ~ ., scales = "free_y") +
     labs(
       y = "Node Value",
+      x = ""
     ) +
     theme_minimal() +
     theme(legend.position = "bottom", 
           panel.grid.major.x = element_blank(),
-          axis.title.x = element_text(size = 12),  
+          axis.title.x = element_blank(),  
           axis.title.y = element_text(size = 12),
-          axis.text.x  = element_text(size = 10),
+          axis.text.x  = element_blank(),
           axis.text.y  = element_text(size = 10),
           strip.text = element_text(size = 12),
           panel.spacing.y = unit(1.7, "lines"),
@@ -394,6 +397,6 @@ if (data_type == 'simulation'){
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
   ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+         node_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
   
 }

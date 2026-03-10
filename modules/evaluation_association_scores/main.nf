@@ -1,5 +1,5 @@
 process evaluation_association_scores {
-    conda "/home/larend/miniforge3/envs/modina-evaluation-env"
+    conda params.conda_eval_env
     publishDir "${params.out_dir}/evaluation_association_scores", mode: 'copy'
 
     input:

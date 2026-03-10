@@ -1,5 +1,6 @@
 process evaluation_roc_recall_enrichment {
-    conda "/home/larend/miniforge3/envs/modina-evaluation-env"
+    conda params.conda_eval_env
+
     publishDir "${params.out_dir}/evaluation_roc_recall_enrichment", mode: 'copy'
 
     input:

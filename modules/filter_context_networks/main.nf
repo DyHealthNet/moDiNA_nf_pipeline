@@ -1,8 +1,6 @@
 process filter_context_networks {
+    conda params.conda_modina_env
     publishDir "${params.out_dir}/filtered_context_networks", mode: 'copy'
-
-    cpus 8
-    memory '32 GB'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}" : "filtering"}"
 

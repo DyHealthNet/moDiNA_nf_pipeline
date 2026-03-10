@@ -1,8 +1,7 @@
 process context_network_inference {
-    publishDir "${params.out_dir}/context_network_inference", mode: 'copy'
+    conda params.conda_modina_env
 
-    cpus 8
-    memory '32 GB'
+    publishDir "${params.out_dir}/context_network_inference", mode: 'copy'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}"
 

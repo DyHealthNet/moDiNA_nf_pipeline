@@ -1,8 +1,7 @@
 process node_edge_ranking {
-    publishDir "${params.out_dir}/rankings", mode: 'copy'
+    conda params.conda_modina_env
 
-    cpus 8
-    memory '32 GB'
+    publishDir "${params.out_dir}/rankings", mode: 'copy'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}"
 

@@ -1,4 +1,6 @@
 process create_summary_file {
+    conda params.conda_modina_env
+
     publishDir "${params.out_dir}", mode: 'copy'
     
     input:

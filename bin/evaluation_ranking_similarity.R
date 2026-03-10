@@ -256,20 +256,17 @@ data_type <- args$data_type
 summary_dt <- fread(summary_file)
 simulations <- max(summary_dt$id, na.rm = TRUE)
 
-if (data_type == 'simulation'){
+if(data_type == 'simulation'){
   summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "algorithm", "ranking_file", "ground_truth_nodes")])
-} else{
+} else {
   summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "algorithm", "ranking_file")])
-  
 }
 
 ######## ------------- Plotting ------------- ########
 
 for (sim in 1:simulations){
   sim_summary <- summary_dt[id == sim, ]
-  
-  # Get ground truth information
-  gt_dict <- NULL
+
   if (data_type == 'simulation'){
     gt_table <- fread(unique(sim_summary[, ground_truth_nodes]))
     gt_dict <- setNames(gt_table$description, gt_table$node)
@@ -301,7 +298,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
-    ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height)
+    ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
     heatmap <- rank_heatmap(data = merged_data, data_type = data_type, gt_dict = gt_dict)
@@ -342,7 +339,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
-    ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height)
+    ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
     heatmap <- rank_heatmap(data = merged_data, data_type = data_type, gt_dict = gt_dict)
@@ -383,7 +380,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
-    ggsave(paste0(sim, '_spearman_corr_heatmap_', ranking_alg, '.png'), heatmap, width = height+2, height = height)
+    ggsave(paste0(sim, '_spearman_corr_heatmap_', ranking_alg, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
     heatmap <- rank_heatmap(data = merged_data, data_type = data_type, gt_dict = gt_dict)

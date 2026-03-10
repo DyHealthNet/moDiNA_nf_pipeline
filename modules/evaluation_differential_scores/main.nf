@@ -1,5 +1,5 @@
 process evaluation_differential_scores {
-    conda "/home/larend/miniforge3/envs/modina-evaluation-env"
+    conda params.conda_eval_env
     publishDir "${params.out_dir}/evaluation_differential_scores", mode: 'copy'
 
     input:

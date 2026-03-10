@@ -208,10 +208,8 @@ name_context_2 <- args$name_context_2
 ######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
-summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2", "ground_truth_nodes")])
-
-
 if (data_type == 'simulation'){
+  summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2", "ground_truth_nodes")])
   data <- data.table()
   nodes <- data.table()
   
@@ -273,6 +271,8 @@ if (data_type == 'simulation'){
   ggsave('association_scores_point_plot.png', plot_all, width = 12, height = 3 * n_tests)
   
 } else if (data_type == 'real'){
+  summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2")])
+
   # Get paths
   scores1 <- summary_dt[id == 1, network_context_1]
   scores2 <- summary_dt[id == 1, network_context_2]
