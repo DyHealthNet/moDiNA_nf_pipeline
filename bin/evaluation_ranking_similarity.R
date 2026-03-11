@@ -298,6 +298,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
+    height <- min(height, 13)
     ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
@@ -308,11 +309,12 @@ for (sim in 1:simulations){
     } else{
       height = 0.25 * top_k
     }
+    height <- min(height, 13)
     ggsave(paste0(sim, '_rank_heatmap_', metric, '.png'), heatmap, width = width, height = height)
     
     # Parallel coordinates plot
     parallel_coordinates <- par_coord(data = merged_data, metric = metric, data_type = data_type, gt_dict = gt_dict)
-    width = max(1.5 * ncol(merged_data), 12)
+    width = min(1.5 * ncol(merged_data), 12)
     ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width, height = 8)
   }
   
@@ -339,6 +341,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
+    height <- min(height, 13)
     ggsave(paste0(sim, '_spearman_corr_heatmap_', metric, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
@@ -349,11 +352,12 @@ for (sim in 1:simulations){
     } else{
       height = 0.25 * top_k
     }
+    height <- min(height, 13)
     ggsave(paste0(sim, '_rank_heatmap_', metric, '.png'), heatmap, width = width, height = height)
     
     # Parallel coordinates plot 
     parallel_coordinates <- par_coord(data = merged_data, metric = metric, data_type = data_type, gt_dict = gt_dict)
-    width = max(1.5 * ncol(merged_data), 12)
+    width = min(1.5 * ncol(merged_data), 12)
     ggsave(paste0(sim, '_parallel_coordinates_', metric, '.png'), parallel_coordinates, width = width, height = 8)
   }
   
@@ -380,6 +384,7 @@ for (sim in 1:simulations){
     # Correlation heatmap
     heatmap <- corr_heatmap(data = merged_data)
     height = 1 + 0.5 * ncol(merged_data)
+    height <- min(height, 13)
     ggsave(paste0(sim, '_spearman_corr_heatmap_', ranking_alg, '.png'), heatmap, width = height+2, height = height, limitsize = FALSE)
     
     # Rank heatmap
@@ -390,11 +395,12 @@ for (sim in 1:simulations){
     } else{
       height = 0.25 * top_k
     }
+    height <- min(height, 13)
     ggsave(paste0(sim, '_rank_heatmap_', ranking_alg, '.png'), heatmap, width = width, height = height)
     
     # Parallel coordinates plot
     parallel_coordinates <- par_coord(data = merged_data, metric = ranking_alg, data_type = data_type, gt_dict = gt_dict)
-    width = max(1.5 * ncol(merged_data), 12)
+    width = min(1.5 * ncol(merged_data), 12)
     ggsave(paste0(sim, '_parallel_coordinates_', ranking_alg, '.png'), parallel_coordinates, width = width, height = 8)
   }
 }

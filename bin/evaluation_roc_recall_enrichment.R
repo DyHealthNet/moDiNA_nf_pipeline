@@ -425,6 +425,7 @@ for(ranking_alg in algorithms) {
       )
     ggsave(paste0('enrichment_boxplot_', ranking_alg, '_node_metrics.png'), combined_enrichment, width = cols * rows + 1, height = 3 * rows)
   } else if (ranking_alg == 'direct_node'){
+    data <- summary_dt_subset
     roc <- roc_curve(data = data, variable_param = node_metric, variable_colors = node_metrics_colors) +
       labs(title = paste0("ROC Curve – Ranking Algorithm: ", ranking_alg)) +
       theme(plot.title = element_text(size = 16, face = "bold"))
@@ -438,8 +439,9 @@ for(ranking_alg in algorithms) {
     enrichment <- recall_and_enrichment(data = data, variable_param = node_metric, variable_colors = node_metrics_colors, rank_of_interest=n_gt_nodes)$enrichment_boxplot +
       labs(title = paste0("Enrichment – Ranking Algorithm: ", ranking_alg)) +
       theme(plot.title = element_text(size = 16, face = "bold"))
-    ggsave(paste0('enrichment_boxplot_', ranking_alg, '.png'), combined_enrichment, width = 6, height = 4)
+    ggsave(paste0('enrichment_boxplot_', ranking_alg, '.png'), enrichment, width = 6, height = 4)
   } else{
+    data <- summary_dt_subset
     roc <- roc_curve(data = data, variable_param = edge_metric, variable_colors = edge_metrics_colors) +
       labs(title = paste0("ROC Curve – Ranking Algorithm: ", ranking_alg)) +
       theme(plot.title = element_text(size = 16, face = "bold"))
@@ -453,7 +455,7 @@ for(ranking_alg in algorithms) {
     enrichment <- recall_and_enrichment(data = data, variable_param = edge_metric, variable_colors = edge_metrics_colors, rank_of_interest=n_gt_nodes)$enrichment_boxplot +
       labs(title = paste0("Enrichment – Ranking Algorithm: ", ranking_alg)) +
       theme(plot.title = element_text(size = 16, face = "bold"))
-    ggsave(paste0('enrichment_boxplot_', ranking_alg, '.png'), combined_enrichment, width = 6, height = 4)
+    ggsave(paste0('enrichment_boxplot_', ranking_alg, '.png'), enrichment, width = 6, height = 4)
   }
 }
 
