@@ -21,6 +21,7 @@ process differential_node_inference {
         --context_file_2 "${file_context_2}" \
         --node_metric "${meta.node_metric}" \
         --multiple_testing "${params.diff_net_analysis.multiple_testing}" \
+        --nan_value "${params.diff_net_analysis.nan_value}" \
         --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}" \
         --meta-file "${file_meta}"
     """

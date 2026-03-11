@@ -1,6 +1,6 @@
 name_context_1: "Female"
 name_context_2: "Male"
-run_type: "single"
+run_type: "all"
 data_type: "real"
 out_dir: "/storage03/larend/SWATH_protein_differential_network_analysis/data/male_female_contexts/out/"
 
@@ -20,4 +20,5 @@ diff_net_analysis:
   filter_rule: "zero"
   max_path_length: 2
   test_type: "nonparametric"
+  nan_value: -89
   multiple_testing: "bh"

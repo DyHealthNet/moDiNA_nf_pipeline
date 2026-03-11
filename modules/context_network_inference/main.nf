@@ -19,6 +19,7 @@ process context_network_inference {
             --test_type "${params.diff_net_analysis.test_type}" \\
             --multiple_testing "${params.diff_net_analysis.multiple_testing}" \\
             --num_workers "${task.cpus}" \\
+            --nan_value "${params.diff_net_analysis.nan_value}" \\
             --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores"       
     """
     
