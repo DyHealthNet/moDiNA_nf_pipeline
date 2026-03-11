@@ -17,7 +17,6 @@ if __name__ == '__main__':
                         help='Path to metadata file containing label and type columns')
     
     # Statistical test parameters
-
     parser.add_argument('--test_type', type=str, default='nonparametric',
                         help='Type of statistical test to use for association score computation (e.g., "parametric", "nonparametric")')
     parser.add_argument('--multiple_testing', type=str, default='bh',

@@ -199,7 +199,7 @@ workflow {
 
     if (params.data_type == 'simulation') {
         evaluation_auc(create_summary_file.out.summary_csv)
-        //evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
+        evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
     }
 
     snapshot_parameters()
