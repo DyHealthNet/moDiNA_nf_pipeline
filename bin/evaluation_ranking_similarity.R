@@ -262,6 +262,8 @@ if(data_type == 'simulation'){
   summary_dt <- unique(summary_dt[, c("id", "edge_metric", "node_metric", "algorithm", "ranking_file")])
 }
 
+top_k <- 20
+
 ######## ------------- Plotting ------------- ########
 
 for (sim in 1:simulations){
