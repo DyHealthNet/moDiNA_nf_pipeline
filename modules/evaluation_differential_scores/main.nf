@@ -6,8 +6,8 @@ process evaluation_differential_scores {
     path summary_file
 
     output:
-    path "node_metrics_point_plots.png", emit: node_metrics_point_plot
-    path "edge_metrics_point_plots.png", emit: edge_metrics_point_plot
+    path "node_metrics_point_plots.png", emit: node_metrics_point_plot, optional: true
+    path "edge_metrics_point_plots.png", emit: edge_metrics_point_plot, optional: true
 
     script:
     """

@@ -21,6 +21,8 @@ if __name__ == '__main__':
                         help='Type of statistical test to use for association score computation (e.g., "parametric", "nonparametric")')
     parser.add_argument('--multiple_testing', type=str, default='bh',
                         help='Correction method for multiple testing')
+    parser.add_argument('--nan_value', type=int, default=-89,
+                        help='Value that represent the NA values in the input data')
     
     # Additional parameters
     parser.add_argument('--num_workers', type=int, default=1,
@@ -40,6 +42,7 @@ if __name__ == '__main__':
         meta_file=meta_file,
         test_type=args.test_type,
         correction=args.multiple_testing,
+        nan_value=args.nan_value,
         num_workers=args.num_workers,
     )
     

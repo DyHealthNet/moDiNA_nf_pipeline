@@ -31,6 +31,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--multiple_testing', type=str, required=True,
                         help='Multiple testing correction method (e.g., bonferroni, fdr_bh, none)')
+    parser.add_argument('--nan_value', type=int, default=-89,
+                        help='Value that represent the NA values in the input data')
 
     
     # Output
@@ -70,6 +72,7 @@ if __name__ == '__main__':
             context2=data2,
             node_metric=node_metric,
             correction=args.multiple_testing,
+            nan_value=args.nan_value,
             meta_file = meta    
         )
         

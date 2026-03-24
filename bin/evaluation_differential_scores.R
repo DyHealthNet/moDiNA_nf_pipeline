@@ -190,37 +190,39 @@ if (data_type == 'simulation'){
     all_plot_data <- rbind(all_plot_data, dt)
   }
   
-  # Plot edge jitter plot
-  edge_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
-    geom_jitter(
-      size = 2,
-      position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
-    ) +
-    facet_grid(metric ~ ., scales = "free_y") +
-    guides(color = "none", fill = "none") +
-    labs(
-      y = "Edge Value",
-      x = "Ground Truth",
-      fill = "Ground Truth",
-      shape = "Simulation",
-    ) +
-    scale_color_manual(values = ground_truth_palette) +
-    theme_minimal() +
-    theme(legend.position = "bottom", 
-          panel.grid.major.x = element_blank(),
-          axis.title.x = element_text(size = 12),  
-          axis.title.y = element_text(size = 12),
-          axis.text.x  = element_text(size = 10),
-          axis.text.y  = element_text(size = 10),
-          strip.text = element_text(size = 12),
-          panel.spacing.y = unit(1.7, "lines"),
-          panel.spacing.x = unit(0.1, "lines"),
-          legend.text = element_text(size=10),
-          legend.title = element_text(size=12),
-          strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
-  
-  ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  # Plot edge jitter plot only if data exists
+  if (is.data.frame(all_plot_data) && nrow(all_plot_data) > 0) {
+    edge_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
+      geom_jitter(
+        size = 2,
+        position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
+      ) +
+      facet_grid(metric ~ ., scales = "free_y") +
+      guides(color = "none", fill = "none") +
+      labs(
+        y = "Edge Value",
+        x = "Ground Truth",
+        fill = "Ground Truth",
+        shape = "Simulation",
+      ) +
+      scale_color_manual(values = ground_truth_palette) +
+      theme_minimal() +
+      theme(legend.position = "bottom", 
+            panel.grid.major.x = element_blank(),
+            axis.title.x = element_text(size = 12),  
+            axis.title.y = element_text(size = 12),
+            axis.text.x  = element_text(size = 10),
+            axis.text.y  = element_text(size = 10),
+            strip.text = element_text(size = 12),
+            panel.spacing.y = unit(1.7, "lines"),
+            panel.spacing.x = unit(0.1, "lines"),
+            legend.text = element_text(size=10),
+            legend.title = element_text(size=12),
+            strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
+    
+    ggsave('edge_metrics_point_plots.png',
+          edge_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  }
   
   
   # Node metrics
@@ -253,37 +255,39 @@ if (data_type == 'simulation'){
   }
   
   
-  # Plot node jitter plot
-  node_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
-    geom_jitter(
-      size = 2,
-      position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
-    ) +
-    facet_grid(metric ~ ., scales = "free_y") +
-    guides(color = "none", fill = "none") +
-    labs(
-      y = "Node Value",
-      x = "Ground Truth",
-      fill = "Ground Truth",
-      shape = "Simulation"
-    ) +
-    scale_color_manual(values = ground_truth_palette) +
-    theme_minimal() +
-    theme(legend.position = "bottom", 
-          panel.grid.major.x = element_blank(),
-          axis.title.x = element_text(size = 12),  
-          axis.title.y = element_text(size = 12),
-          axis.text.x  = element_text(size = 10),
-          axis.text.y  = element_text(size = 10),
-          strip.text = element_text(size = 12),
-          panel.spacing.y = unit(1.7, "lines"),
-          panel.spacing.x = unit(0.1, "lines"),
-          legend.text = element_text(size=10),
-          legend.title = element_text(size=12),
-          strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
-  
-  ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  # Plot node jitter plot only if data exists
+  if (is.data.frame(all_plot_data) && nrow(all_plot_data) > 0) {
+    node_metrics_plot <- ggplot(all_plot_data, aes(x=description, y = value, fill = description, color = description, shape = as.factor(sim))) +
+      geom_jitter(
+        size = 2,
+        position = position_jitterdodge(jitter.width = 0.15, jitter.height = 0, dodge.width = 0.5)
+      ) +
+      facet_grid(metric ~ ., scales = "free_y") +
+      guides(color = "none", fill = "none") +
+      labs(
+        y = "Node Value",
+        x = "Ground Truth",
+        fill = "Ground Truth",
+        shape = "Simulation"
+      ) +
+      scale_color_manual(values = ground_truth_palette) +
+      theme_minimal() +
+      theme(legend.position = "bottom", 
+            panel.grid.major.x = element_blank(),
+            axis.title.x = element_text(size = 12),  
+            axis.title.y = element_text(size = 12),
+            axis.text.x  = element_text(size = 10),
+            axis.text.y  = element_text(size = 10),
+            strip.text = element_text(size = 12),
+            panel.spacing.y = unit(1.7, "lines"),
+            panel.spacing.x = unit(0.1, "lines"),
+            legend.text = element_text(size=10),
+            legend.title = element_text(size=12),
+            strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
+    
+    ggsave('node_metrics_point_plots.png',
+          node_metrics_plot, width = 8, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  }
   
 } else if (data_type == 'real'){
   
@@ -318,7 +322,8 @@ if (data_type == 'simulation'){
     all_plot_data <- rbind(all_plot_data, dt)
   }
   
-  # Plot edge jitter plot
+  # Plot edge jitter plot only if data exists
+  if (is.data.frame(all_plot_data) && nrow(all_plot_data) > 0) {
   edge_metrics_plot <- ggplot(all_plot_data, aes(x=1, y = value)) +
     geom_jitter(
       shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70"
@@ -342,8 +347,9 @@ if (data_type == 'simulation'){
           legend.title = element_text(size=12),
           strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
   
-  ggsave('edge_metrics_point_plots.png',
-         edge_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+    ggsave('edge_metrics_point_plots.png',
+          edge_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  }
   
   # Node metrics
   all_plot_data <- list()
@@ -373,30 +379,33 @@ if (data_type == 'simulation'){
     all_plot_data <- rbind(all_plot_data, dt)
   }
   
-  node_metrics_plot <- ggplot(all_plot_data, aes(x=1, y = value)) +
-    geom_jitter(
-      shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70"
-    ) +
-    facet_grid(metric ~ ., scales = "free_y") +
-    labs(
-      y = "Node Value",
-      x = ""
-    ) +
-    theme_minimal() +
-    theme(legend.position = "bottom", 
-          panel.grid.major.x = element_blank(),
-          axis.title.x = element_blank(),  
-          axis.title.y = element_text(size = 12),
-          axis.text.x  = element_blank(),
-          axis.text.y  = element_text(size = 10),
-          strip.text = element_text(size = 12),
-          panel.spacing.y = unit(1.7, "lines"),
-          panel.spacing.x = unit(0.1, "lines"),
-          legend.text = element_text(size=10),
-          legend.title = element_text(size=12),
-          strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
-  
-  ggsave('node_metrics_point_plots.png',
-         node_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+  # Plot node jitter plot only if data exists
+  if (is.data.frame(all_plot_data) && nrow(all_plot_data) > 0) {
+    node_metrics_plot <- ggplot(all_plot_data, aes(x=1, y = value)) +
+      geom_jitter(
+        shape = 21, size = 2.0, alpha = 0.6, stroke = 1,color="gray50", fill="gray70"
+      ) +
+      facet_grid(metric ~ ., scales = "free_y") +
+      labs(
+        y = "Node Value",
+        x = ""
+      ) +
+      theme_minimal() +
+      theme(legend.position = "bottom", 
+            panel.grid.major.x = element_blank(),
+            axis.title.x = element_blank(),  
+            axis.title.y = element_text(size = 12),
+            axis.text.x  = element_blank(),
+            axis.text.y  = element_text(size = 10),
+            strip.text = element_text(size = 12),
+            panel.spacing.y = unit(1.7, "lines"),
+            panel.spacing.x = unit(0.1, "lines"),
+            legend.text = element_text(size=10),
+            legend.title = element_text(size=12),
+            strip.background = element_rect(fill = "grey90", color = "black", linewidth = 0.5))
+    
+    ggsave('node_metrics_point_plots.png',
+          node_metrics_plot, width = 6, height = 3 * length(unique(all_plot_data$metric)), limitsize = FALSE)
+    }
   
 }
