@@ -59,13 +59,6 @@ if __name__ == '__main__':
             edge_metric=edge_metric,
             max_path_length=max_path_length
         )
-        
-        if 'post' in edge_metric:
-            edges_diff = edges_diff[['label1', 'label2', 'test_type', edge_metric]]
-        else:
-            edge_metric_signed = edge_metric + '_signed'
-            edges_diff = edges_diff[['label1', 'label2', 'test_type', edge_metric, edge_metric_signed]]
-                
  
     edges_diff.to_csv(f'{args.output_prefix}_{edge_metric}_edge_metrics.csv', index=True)
 
