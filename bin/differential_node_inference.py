@@ -42,9 +42,9 @@ if __name__ == '__main__':
     # Meta File
     parser.add_argument('--meta-file', type=str, required=True,
                         help='Path to meta file storing the data types of input data.')
-    
+    parser.add_argument('--num_workers', type=int, default=4,
+                        help='Number of worker threads to use for parallel processing.')
     args = parser.parse_args()
-
     
     if args.node_metric == "":
         node_metric = None
@@ -73,7 +73,8 @@ if __name__ == '__main__':
             node_metric=node_metric,
             correction=args.multiple_testing,
             nan_value=args.nan_value,
-            meta_file = meta    
+            meta_file = meta,
+            num_workers = args.num_workers    
         )
             
     nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)
