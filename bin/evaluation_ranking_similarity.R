@@ -154,11 +154,10 @@ rank_heatmap <- function(data, data_type, gt_dict=NULL, top_k=20){
     theme_minimal() +
     theme(legend.position = 'right',
           axis.text.x = element_text(angle = 45, hjust = 1),
-          axis.text.y = element_blank(),
           plot.margin = margin(t = 5, r = 5, b = 5, l = 50),
     ) +
     labs(x = "",
-         y = "")
+         y = "Features")
   
   if (data_type == 'simulation'){
   heatmap <- heatmap + annotation + 
@@ -305,7 +304,7 @@ for (sim in 1:simulations){
     
     # Rank heatmap
     heatmap <- rank_heatmap(data = merged_data, data_type = data_type, gt_dict = gt_dict)
-    width = 5.5
+    width = 8
     if (data_type == 'simulation'){
       height = 0.25 * nrow(gt_table)
     } else{
