@@ -30,8 +30,7 @@ if __name__ == '__main__':
     scores2 = pd.read_csv(args.network_context_2)
     
     # Rescaling
-    scores1, scores2 = modina.pre_rescaling(scores1=scores1, scores2=scores2, metric='pre-E')
-    scores1, scores2 = modina.pre_rescaling(scores1=scores1, scores2=scores2, metric='pre-P')  
+    scores1, scores2 = modina.pre_rescaling(scores1=scores1, scores2=scores2, metric='rescaled-E')
     
     scores1.to_csv(f"{args.name_context_1}_rescaled_association_scores.csv", index=False)
     scores2.to_csv(f"{args.name_context_2}_rescaled_association_scores.csv", index=False)

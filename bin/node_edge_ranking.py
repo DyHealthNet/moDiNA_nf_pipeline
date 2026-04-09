@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # Ranking algorithm
     parser.add_argument('--ranking_algorithm', type=str, required=True,
                         choices=['PageRank+', 'PageRank', 'absDimontRank', 
-                                'DimontRank', 'direct_node', 'direct_edge'],
+                                'DimontRank', 'nodeRank', 'edgeRank'],
                         help='Ranking algorithm to compute')
     
     # Output
@@ -52,23 +52,23 @@ if __name__ == '__main__':
 
 
     # Run ranking computation
-    ranks, ranks_per_type = modina.compute_ranking(
+    ranks = modina.compute_ranking(
         nodes_diff=nodes_diff,
         edges_diff=edges_diff,
         ranking_alg=args.ranking_algorithm,
         meta_file=meta_df
     )
     
-    ranking_df = pd.DataFrame({"node": ranks, "rank": range(1, len(ranks) + 1)})
-    ranking_df = ranking_df.sort_values("node")
-    ranking_df.to_csv(f'{args.output_prefix}_ranking.csv', index=False)
+    #ranking_df = pd.DataFrame({"node": ranks, "rank": range(1, len(ranks) + 1)})
+    #ranking_df = ranking_df.sort_values("node")
+    ranks.to_csv(f'{args.output_prefix}_ranking.csv', index=False)
     
     # For each list in ranks_per_type, check if not empty and save as csv -> first item is cont, binary, categorical
-    for type_name, type_ranks in ranks_per_type.items():
-        if type_ranks:
-            type_ranking_df = pd.DataFrame({"node": type_ranks, "rank": range(1, len(type_ranks) + 1)})
-            type_ranking_df = type_ranking_df.sort_values("node")
-            type_ranking_df.to_csv(f'{args.output_prefix}_ranking_{type_name}.csv', index=False)
+    #for type_name, type_ranks in ranks_per_type.items():
+    #    if type_ranks:
+    #        type_ranking_df = pd.DataFrame({"node": type_ranks, "rank": range(1, len(type_ranks) + 1)})
+    #        type_ranking_df = type_ranking_df.sort_values("node")
+    #        type_ranking_df.to_csv(f'{args.output_prefix}_ranking_{type_name}.csv', index=False)
     print("Ranking computation completed successfully")
     
     

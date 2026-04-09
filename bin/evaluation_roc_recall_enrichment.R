@@ -20,11 +20,11 @@ node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "No
 node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
 names(node_metrics_colors) <- node_metrics
 
-edge_metrics <- c("pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
-edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
+edge_metrics <- c("pre-LS", "post-LS", "diff-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
+edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
 names(edge_metrics_colors) <- edge_metrics
 
-algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'direct_node', 'direct_edge')
+algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'nodeRank', 'edgeRank')
 algorithm_colors <- c("#4B0082", "#9370DB", "#004225", "#228B22", "#8B0000", "#FF7F50")
 names(algorithm_colors) <- algorithms
 
@@ -251,10 +251,10 @@ summary_file <- args$summary_file
 summary_dt <- fread(summary_file)
 
 # Store edge ranking independently
-edge_ranking_dt <- summary_dt[algorithm == "direct_edge",]
+edge_ranking_dt <- summary_dt[algorithm == "edgeRank",]
 
-# Remove direct_edge ranking
-summary_dt <- summary_dt[summary_dt$algorithm != "direct_edge",]
+# Remove edgeRank ranking
+summary_dt <- summary_dt[summary_dt$algorithm != "edgeRank",]
 
 # Calculate ROC statistics for each row
 summary_dt[, roc_obj := mapply(calculate_ROC_statistics, 
@@ -424,7 +424,7 @@ for(ranking_alg in algorithms) {
         legend.position = "bottom"
       )
     ggsave(paste0('enrichment_boxplot_', ranking_alg, '_node_metrics.png'), combined_enrichment, width = cols * rows + 1, height = 3 * rows)
-  } else if (ranking_alg == 'direct_node'){
+  } else if (ranking_alg == 'nodeRank'){
     data <- summary_dt_subset
     roc <- roc_curve(data = data, variable_param = node_metric, variable_colors = node_metrics_colors) +
       labs(title = paste0("ROC Curve – Ranking Algorithm: ", ranking_alg)) +

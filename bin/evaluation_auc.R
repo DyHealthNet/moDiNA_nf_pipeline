@@ -44,8 +44,8 @@ node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "No
 node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
 names(node_metrics_colors) <- node_metrics
   
-edge_metrics <- c("pre-LS", "post-LS", "pre-P", "post-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
-edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
+edge_metrics <- c("pre-LS", "post-LS", "diff-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
+edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
 names(edge_metrics_colors) <- edge_metrics
 
 ######## ------------- Argument parser ------------- ########
@@ -60,10 +60,10 @@ summary_file <- args$summary_file
 summary_dt <- fread(summary_file)
 
 # Store edge ranking independently
-edge_ranking_dt <- summary_dt[algorithm == "direct_edge",]
+edge_ranking_dt <- summary_dt[algorithm == "edgeRank",]
 
-# Remove direct_edge ranking
-summary_dt <- summary_dt[summary_dt$algorithm != "direct_edge",]
+# Remove edgeRank ranking
+summary_dt <- summary_dt[summary_dt$algorithm != "edgeRank",]
 
 # Calculate AUC for each row with row number tracking
 summary_dt[, auc := mapply(calculate_AUC_for_row, 
@@ -84,13 +84,13 @@ if (nrow(edge_ranking_dt) > 0) {
 }
 
 # Replace names
-summary_dt[algorithm == "direct_node", algorithm := "Direct Node"]
-summary_dt[algorithm == "direct_edge", algorithm := "Direct Edge"]
+#summary_dt[algorithm == "nodeRank", algorithm := "Direct Node"]
+#summary_dt[algorithm == "edgeRank", algorithm := "Direct Edge"]
 summary_dt[node_metric == "", node_metric := "None"]
 summary_dt[edge_metric == "", edge_metric := "None"]
 
 # Level algorithms
-summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "Direct Node", "Direct Edge"))
+summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "nodeRank", "edgeRank"))
 
 # Group by configuration and calculate mean/sd AUC
 results <- summary_dt[, .(

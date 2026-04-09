@@ -15,7 +15,7 @@ ground_truth_palette <- c(
   "diff. corr."                = "#fdbf6f",
   "mean shift"                  = "#C195C4",
   "mean shift + diff. corr."    = "#b2df8a",
-  "non-ground truth"            = "lightgray"
+  "non-ground truth"            = "#F0F0F0"
 )
 
 
@@ -114,4 +114,4 @@ if(data_type == "simulation"){
     labs( x= "", y = "Mean Value") +
     facet_wrap(~type, scales = "free")
 }
-ggsave("mean_shift_point_plot.png", width = 8, height = 5)
+ggsave("mean_shift_point_plot.png", width = 8, height = 3.5)

@@ -83,11 +83,11 @@ Only required when `data_type = 'real'`.
 |---|---|---|---|
 | `diff_net_analysis.path_config` | `path` | `'input_samplesheet.csv'` | Path to the CSV samplesheet listing moDiNA configurations to run. Required when `run_type = 'file'`. Columns: `node_metric`, `edge_metric`, `ranking_algorithm`. |
 | `diff_net_analysis.node_metric` | `string` | `'STC'` | Node-level differential metric. Used when `run_type = 'single'`. One of: `STC`, `DC-P`, `DC-E`, `WDC-P`, `WDC-E`, `PRC-P`, `None`. |
-| `diff_net_analysis.edge_metric` | `string` | `'pre-LS'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `pre-P`, `pre-E`, `post-E`, `post-P`, `int-IS`, `pre-LS`, `post-LS`, `pre-PE`, `post-PE`, `None`. |
-| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes and edges in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `absDimontRank`, `DimontRank`, `direct_node`, `direct_edge`. |
+| `diff_net_analysis.edge_metric` | `string` | `'pre-LS'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `diff-P`, `pre-E`, `post-E`, `int-IS`, `pre-LS`, `post-LS`, `pre-PE`, `post-PE`, `None`. |
+| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes and edges in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `absDimontRank`, `DimontRank`, `nodeRank`, `edgeRank`. |
 | `diff_net_analysis.filter_method` | `string` | `''` | Optional method to filter context-specific networks before differential analysis. One of: `degree`, `density`, `quantile`. Leave empty to skip filtering. |
 | `diff_net_analysis.filter_param` | `integer / float` | `2` | Parameter for the chosen filter method. Integer for `degree`; float in (0, 1) for `density` and `quantile`. |
-| `diff_net_analysis.filter_metric` | `string` | `'pre-P'` | Edge score used as the basis for filtering. One of: `pre-P`, `pre-E`. Required when `filter_method` is set. |
+| `diff_net_analysis.filter_metric` | `string` | `'raw-P'` | Edge score used as the basis for filtering. One of: `raw-P`, `rescaled-E`. Required when `filter_method` is set. |
 | `diff_net_analysis.filter_rule` | `string` | `'zero'` | Rule applied when filtering edges. One of: `zero` (set filtered edges to zero), `union` (keep edges present in at least one context). |
 | `diff_net_analysis.max_path_length` | `integer` | `2` | Maximum path length used for the `int-IS` edge metric. Must be an integer in [0, 4]. Only relevant when `int-IS` is selected as an edge metric. |
 | `diff_net_analysis.test_type` | `string` | `'nonparametric'` | Type of statistical test used during context network inference. One of: `parametric`, `nonparametric`. |

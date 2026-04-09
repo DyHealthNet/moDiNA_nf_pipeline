@@ -22,9 +22,9 @@ ground_truth_palette <- c(
 )
 
 # Valid focus values
-edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
+edge_metrics_subset = c('diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
-algorithms_subset = c('direct_node', 'PageRank', 'PageRank+', 'DimontRank', 'absDimontRank')
+algorithms_subset = c('nodeRank', 'PageRank', 'PageRank+', 'DimontRank', 'absDimontRank')
 
 
 # Extract ground truth information from a row
@@ -49,6 +49,7 @@ get_gt_info <- function(row, mode, gt_dict) {
 
 # Spearman correlation heatmap
 corr_heatmap <- function(data){
+  print(data[, -1])
   # Compute correlation matrix
   cor_mat <- cor(data[,-1], method = "spearman", use = "pairwise.complete.obs")
   dist_mat <- as.dist(1 - cor_mat)
@@ -275,7 +276,7 @@ for (sim in 1:simulations){
   }
   
   # For now, only take node rankings
-  node_rankings <- sim_summary[algorithm!='direct_edge', ]
+  node_rankings <- sim_summary[algorithm!='edgeRank', ]
   
   # Edge metrics
   for (metric in unique(node_rankings$edge_metric)){
@@ -288,7 +289,13 @@ for (sim in 1:simulations){
     
     # Read in rankings
     ranking_list <- lapply(data$ranking_file, fread)
-    
+
+    # Remove type and score columns
+    ranking_list <- lapply(ranking_list, function(dt) {
+      dt[, c("type", "score") := NULL]
+      dt
+    })
+
     # Create config column and rename rankings
     data[, config := paste(node_metric, algorithm, sep = ", ")]
     names(ranking_list) <- data$config
@@ -332,6 +339,12 @@ for (sim in 1:simulations){
     # Read in rankings
     ranking_list <- lapply(data$ranking_file, fread)
     
+    # Remove type and score columns
+    ranking_list <- lapply(ranking_list, function(dt) {
+      dt[, c("type", "score") := NULL]
+      dt
+    })
+    
     # Create config column and rename rankings
     data[, config := paste(edge_metric, algorithm, sep = ", ")]
     names(ranking_list) <- data$config
@@ -374,6 +387,12 @@ for (sim in 1:simulations){
     
     # Read in rankings
     ranking_list <- lapply(data$ranking_file, fread)
+    
+    # Remove type and score columns
+    ranking_list <- lapply(ranking_list, function(dt) {
+      dt[, c("type", "score") := NULL]
+      dt
+    })
     
     # Create config column and rename rankings
     data[, config := paste(node_metric, edge_metric, sep = ", ")]

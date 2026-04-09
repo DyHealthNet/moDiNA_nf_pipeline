@@ -137,7 +137,7 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
 }
 
 # Valid metrics
-edge_metrics_subset = c('pre-P', 'post-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
+edge_metrics_subset = c('diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
 
 ######## ------------- Argument parser ------------- ########

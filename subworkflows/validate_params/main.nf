@@ -30,8 +30,8 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
         }
     }
     
-    // Check filter_metric (pre-P or pre-E)
-    def valid_filter_metrics = ['pre-P', 'pre-E']
+    // Check filter_metric (raw-P or rescaled-E)
+    def valid_filter_metrics = ['raw-P', 'rescaled-E']
     if (filter_metric && filter_metric != '') {
         if (!valid_filter_metrics.contains(filter_metric)) {
             error "ERROR: Parameter 'diff_net_analysis.filter_metric' must be one of: ${valid_filter_metrics.join(', ')}"
@@ -52,7 +52,7 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
 }
 
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'None'] // Note: PRC-E include again
+    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E', 'None']
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -62,7 +62,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
+    def valid_edge_metrics = ['diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -72,7 +72,7 @@ def validateEdgeMetric(edge_metric) {
 }
 
 def validateRankingAlgorithm(ranking_algorithm) {
-    def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
+    def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank', 'edgeRank']
     if (!ranking_algorithm || ranking_algorithm == '') {
         error "ERROR: Parameter 'ranking_algorithm' must be provided"
     }
@@ -87,24 +87,24 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether edge_metric = post-P, post-E, post-CS, post-LS, post-PE and DimontRank is used -> give error
-        if (['post-P', 'post-E', 'post-CS', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
+        // Check whether edge_metric = post-E, post-LS, post-PE and DimontRank is used -> give error
+        if (['post-E', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
             if (warn) log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
             continue
         }
 
-        // Check whether DimontRank, absDimontRank, PageRank, direct_edge is used with any node_metric -> just give warning
-        if (['DimontRank', 'absDimontRank', 'PageRank', 'direct_edge'].contains(ranking_algo)) {
+        // Check whether DimontRank, absDimontRank, PageRank, edgeRank is used with any node_metric -> just give warning
+        if (['DimontRank', 'absDimontRank', 'PageRank', 'edgeRank'].contains(ranking_algo)) {
             if (node_metric != '') {
                 if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
                 config[0] = ''
             }
         }
 
-        // Check whether direct_node is used with any edge_metric -> just give warning
-        if (ranking_algo == 'direct_node') {
+        // Check whether nodeRank is used with any edge_metric -> just give warning
+        if (ranking_algo == 'nodeRank') {
             if (edge_metric != '') {
-                if (warn) log.warn "WARNING: Configuration with ranking_algorithm 'direct_node' does not use edge_metric and will ignore the provided edge_metric '${edge_metric}'."
+                if (warn) log.warn "WARNING: Configuration with ranking_algorithm 'nodeRank' does not use edge_metric and will ignore the provided edge_metric '${edge_metric}'."
                 config[1] = ''
             }
         }
@@ -241,9 +241,9 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P'] // Note: PRC-E include again
-        def valid_edge_metrics = ['pre-P', 'pre-E', 'post-E', 'post-P', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
-        def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'direct_node', 'direct_edge']
+        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
+        def valid_edge_metrics = ['diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
+        def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank', 'edgeRank']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
 

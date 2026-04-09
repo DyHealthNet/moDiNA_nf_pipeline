@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--multiple_testing', type=str, default='bh',
                         help='Correction method for multiple testing')
     parser.add_argument('--nan_value', type=int, default=-89,
-                        help='Value that represent the NA values in the input data')
+                        help='Value that represents the NA values in the input data')
     
     # Additional parameters
     parser.add_argument('--num_workers', type=int, default=1,

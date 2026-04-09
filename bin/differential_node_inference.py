@@ -33,8 +33,9 @@ if __name__ == '__main__':
                         help='Multiple testing correction method (e.g., bonferroni, fdr_bh, none)')
     parser.add_argument('--nan_value', type=int, default=-89,
                         help='Value that represent the NA values in the input data')
+    parser.add_argument('--num_workers', type=int, default=1, 
+                        help='Number of workers for parallel computation of STC')
 
-    
     # Output
     parser.add_argument('--output_prefix', type=str, required=True,
                         help='Prefix for output files')
@@ -73,6 +74,7 @@ if __name__ == '__main__':
             node_metric=node_metric,
             correction=args.multiple_testing,
             nan_value=args.nan_value,
+            num_workers=args.num_workers,
             meta_file = meta    
         )
             
