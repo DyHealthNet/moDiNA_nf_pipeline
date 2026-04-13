@@ -16,7 +16,7 @@ calculate_AUC_per_simulation <- function(ranking, ground_truth, node_ranking = T
   if(node_ranking){
     ranking[, is_ground_truth := ifelse(node %in% ground_truth$node, 1, 0)]
   } else {
-    ranking[, is_ground_truth := ifelse(node %in% ground_truth$edge, 1, 0)]
+    ranking[, is_ground_truth := ifelse(edge %in% ground_truth$edge, 1, 0)]
   }
 
   # Calculate AUC
