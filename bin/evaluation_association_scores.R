@@ -60,17 +60,17 @@ calculate_mean_difference <- function(scores, context1, context2, metric, data_t
   data <- copy(scores)
   if(data_type == "simulation"){
     # Select columns
-    cols_to_keep <- c("id", "sim", "groundtruth", "test_type", "context", metric)
+    cols_to_keep <- c("id", "sim", "description", "test_type", "context", metric)
     scores <- scores[, ..cols_to_keep]
     # Make sure scores is a data.table
-    setDT(scores)  # Add this line
-    scores <- dcast(scores, id + groundtruth + sim + test_type ~ context, value.var = metric)
+    setDT(scores)
+    scores <- dcast(scores, id + description + sim + test_type ~ context, value.var = metric)
     scores$diff <- abs(scores[[name_context_2]] - scores[[name_context_1]])
     # Average for ground truth and non-ground truth nodes
-    scores_summary <- scores[, .(mean_diff = mean(diff, na.rm = TRUE)), by = .(groundtruth, test_type)]
+    scores_summary <- scores[, .(mean_diff = mean(diff, na.rm = TRUE)), by = .(description, test_type)]
     scores_summary$mean_diff <- paste0("Mean~Difference:~", round(scores_summary$mean_diff, 3))
-    colnames(scores_summary) <- c("groundtruth", "test_type", paste0("mean_diff_", metric))
-    data <- merge(data, scores_summary, by = c("groundtruth", "test_type"), all.x = TRUE)
+    colnames(scores_summary) <- c("description", "test_type", paste0("mean_diff_", metric))
+    data <- merge(data, scores_summary, by = c("description", "test_type"), all.x = TRUE)
   } else {
     # Select columns
     cols_to_keep <- c("id", "test_type", "context", metric)
@@ -99,7 +99,7 @@ assoc_scores_jitter <- function(scores, metric, data_type){
     strip_title_element <- element_text(size = 12)
     mean_col <- "mean_diff_raw-E"
   }
-  grid_formula <- as.formula(paste("test_type~`", mean_col,"`", sep=""))
+  grid_formula <- as.formula("test_type ~ .")
   if (data_type == 'simulation'){
     all_plots <- list()
     for(i in 1:length(unique(scores$test_type))){
@@ -110,9 +110,36 @@ assoc_scores_jitter <- function(scores, metric, data_type){
         context_label_element <- element_blank()
       }
       scores_tmp <- scores[scores$test_type == t,]
+      scores_tmp <- scores_tmp[order(scores_tmp$description == "non-ground truth"), ]
       p <- ggplot(scores_tmp, aes(x = context, y = get(metric), color = description, shape = as.factor(sim))) +
-        geom_point(aes(group=interaction(id,sim)), position = position_dodge(width = 0.3), size = 2) +
-        geom_line(aes(group=interaction(id,sim)), alpha = 0.2, position = position_dodge(width = 0.3)) +
+        #geom_point(aes(group=interaction(id,sim)), position = position_dodge(width = 0.3), size = 2) +
+        #geom_line(aes(group=interaction(id,sim)), alpha = 0.2, position = position_dodge(width = 0.3)) +
+        geom_line(
+          data = scores_tmp[scores_tmp$description == "non-ground truth",],
+          aes(group = interaction(id,sim)),
+          alpha = 0.15,
+          position = position_dodge(width = 0.3),
+          color = "#F0F0F0"
+        ) +
+        geom_point(
+          data = scores_tmp[scores_tmp$description == "non-ground truth",],
+          aes(group = interaction(id,sim)),
+          position = position_dodge(width = 0.3),
+          size = 2,
+          color = "#F0F0F0"
+        ) +
+        geom_line(
+          data = scores_tmp[scores_tmp$description != "non-ground truth",],
+          aes(group = interaction(id,sim), color = description),
+          alpha = 0.25,
+          position = position_dodge(width = 0.3)
+        ) +
+        geom_point(
+          data = scores_tmp[scores_tmp$description != "non-ground truth",],
+          aes(group = interaction(id,sim), color = description, shape = as.factor(sim)),
+          position = position_dodge(width = 0.3),
+          size = 2
+        ) +
         labs(
           y = "",
           x = "",
@@ -135,40 +162,41 @@ assoc_scores_jitter <- function(scores, metric, data_type){
       all_plots[[t]] <- p
     }
   } else {
-      all_plots <- list()
-      for(i in 1:length(unique(scores$test_type))){
-        t <- unique(scores$test_type)[i]
-        if(i == length(unique(scores$test_type))){
-          context_label_element <- element_text(size = 12)
-        } else {
-          context_label_element <- element_blank()
-        }
-        scores_tmp <- scores[scores$test_type == t,]
-        p <- ggplot(scores_tmp, aes(x = context, y = get(metric))) +
-          geom_point(aes(group=id), position = position_dodge(width = 0.3), size = 2, color="grey50") +
-          geom_line(aes(group=id), alpha = 0.2, position = position_dodge(width = 0.3), color="grey50") +
-          labs(
-            y = "",
-            x = ""
-          ) +
-          theme_minimal() +
-          theme(legend.position = "right", 
-                panel.grid.major.x = element_blank(),
-                axis.text.x  = context_label_element,
-                axis.text.y  = element_text(size = 10),
-                panel.spacing.y = unit(1.7, "lines"),
-                panel.spacing.x = unit(0.1, "lines"),
-                legend.text = element_text(size=10),
-                legend.title = element_text(size=12),
-                strip.background.y = strip_background_element,
-                strip.text.y = strip_title_element) +
-          facet_grid(grid_formula, label = "label_parsed")
-        all_plots[[t]] <- p
+    all_plots <- list()
+    for(i in 1:length(unique(scores$test_type))){
+      t <- unique(scores$test_type)[i]
+      if(i == length(unique(scores$test_type))){
+        context_label_element <- element_text(size = 12)
+      } else {
+        context_label_element <- element_blank()
       }
+      scores_tmp <- scores[scores$test_type == t,]
+      scores_tmp <- scores_tmp[order(scores_tmp$description == "non-ground truth"), ]
+      p <- ggplot(scores_tmp, aes(x = context, y = get(metric))) +
+        geom_point(aes(group=id), position = position_dodge(width = 0.3), size = 2, color="grey50") +
+        geom_line(aes(group=id), alpha = 0.2, position = position_dodge(width = 0.3), color="grey50") +
+        labs(
+          y = "",
+          x = ""
+        ) +
+        theme_minimal() +
+        theme(legend.position = "right", 
+              panel.grid.major.x = element_blank(),
+              axis.text.x  = context_label_element,
+              axis.text.y  = element_text(size = 10),
+              panel.spacing.y = unit(1.7, "lines"),
+              panel.spacing.x = unit(0.1, "lines"),
+              legend.text = element_text(size=10),
+              legend.title = element_text(size=12),
+              strip.background.y = strip_background_element,
+              strip.text.y = strip_title_element) +
+        facet_grid(grid_formula, label = "label_parsed")
+      all_plots[[t]] <- p
     }
-    
-    p <- wrap_plots(all_plots, ncol = 1)
-    return(p)
+  }
+  
+  p <- wrap_plots(all_plots, ncol = 1)
+  return(p)
 }
 
 # Set colors for multiple ground truth types
@@ -176,18 +204,18 @@ ground_truth_palette <- c(
   "diff. corr."                = "#fdbf6f",
   "mean shift"                  = "#C195C4",
   "mean shift + diff. corr."    = "#b2df8a",
-  "non-ground truth"            = "lightgray"
+  "non-ground truth"            = "#F0F0F0"
 )
 
 
 # Test naming
 statistical_tests <-   c("pearson"="Pearson", 
-                       "spearman"="Spearman",
-                       "ttest" = "italic(t)~-Test",
-                       "mwu" = "Mann-Whitney~italic(U)",
-                       "anova" = "ANOVA",
-                       "kruskal" = "Kruskal-Wallis",
-                       "chi2" = "chi^2~-Test")
+                         "spearman"="Spearman",
+                         "ttest" = "italic(t)~-Test",
+                         "mwu" = "Mann-Whitney~italic(U)",
+                         "anova" = "ANOVA",
+                         "kruskal" = "Kruskal-Wallis",
+                         "chi2" = "chi^2~-Test")
 
 ######## ------------- Argument parser ------------- ########
 parser <- ArgumentParser(description='AUC Heatmap Generator')
@@ -248,7 +276,7 @@ if (data_type == 'simulation'){
   # Calculate mean differences between context 1 and context 2
   data <- calculate_mean_difference(data, name_context_1, name_context_2, "raw-P")
   data <- calculate_mean_difference(data, name_context_1, name_context_2, "raw-E")
-
+  
   # Plot and save
   plot_p <- assoc_scores_jitter(data, 'raw-P', data_type='simulation')
   plot_e <- assoc_scores_jitter(data, 'raw-E', data_type='simulation')
@@ -265,14 +293,14 @@ if (data_type == 'simulation'){
              angle = 90, size = 4) +
     theme_void()
   
-  plot_all <- y_label_p + plot_p + y_label_e + plot_e + plot_layout(guides = "collect", widths = c(0.03, 1, 0.03, 1)) & theme(legend.position = "bottom")
+  plot_all <- y_label_p + plot_p + y_label_e + plot_e + plot_layout(guides = "collect", widths = c(0.03, 0.5, 0.03, 0.5)) & theme(legend.position = "bottom")
   
-
-  ggsave('association_scores_point_plot.png', plot_all, width = 12, height = 3 * n_tests)
+  
+  ggsave('association_scores_point_plot.png', plot_all, width = 8, height = 3 * n_tests)
   
 } else if (data_type == 'real'){
   summary_dt <- unique(summary_dt[, c("id", "network_context_1", "network_context_2")])
-
+  
   # Get paths
   scores1 <- summary_dt[id == 1, network_context_1]
   scores2 <- summary_dt[id == 1, network_context_2]
@@ -300,7 +328,7 @@ if (data_type == 'simulation'){
   plot_e <- assoc_scores_jitter(scores_ab, 'raw-E', data_type='real')
   
   n_tests <- scores_ab[, uniqueN(test_type)]
-
+  
   y_label_p <- ggplot() +
     annotate("text", x = 0, y = 0, label = "Adjusted P-Value",
              angle = 90, size = 4) +
