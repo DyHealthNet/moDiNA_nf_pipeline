@@ -2,7 +2,8 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/storage03/larend/moDiNA_nf_pipeline/out/simulated/very_weak/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/out/"
+work_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/work/"
 
 simulation:
   n_simulations: 3
@@ -25,8 +26,8 @@ simulation:
   n_both_bi_cont: 3
   n_both_bi_cat: 3
   n_both_cont_cat: 3
-  shift: 0.1
-  corr: 0.1
+  shift: 0.5
+  corr: 0.7
 
 diff_net_analysis:
   max_path_length: 2
