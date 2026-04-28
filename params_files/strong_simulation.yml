@@ -2,7 +2,8 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/storage03/larend/moDiNA_nf_pipeline/out/simulated/strong/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/strong/out/"
+work_dir: "/nfs/data/DyHealthNet/moDiNA_data/strong/work/"
 
 simulation:
   n_simulations: 3
