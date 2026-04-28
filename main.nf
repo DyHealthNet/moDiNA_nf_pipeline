@@ -151,11 +151,11 @@ workflow {
         .map { meta, node_metrics_file, edge_metrics_file, ranking_file  ->
             [meta, ranking_file, node_metrics_file, edge_metrics_file]
         }
-        // Add network_context_1 and network_context_2 by matching meta.id
-        .combine(network_context_1)
+        // Add rescaled_network_context_1 and rescaled_network_context_2 by matching meta.id
+        .combine(rescaled_network_context_1)
         .filter { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net ->
             meta_ranking.id == meta_network_1.id}
-        .combine(network_context_2)
+        .combine(rescaled_network_context_2)
         .filter { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2 ->
             meta_ranking.id == meta_network_2.id}
         // Add file_context_1 and file_context_2 by matching meta.id
@@ -163,7 +163,7 @@ workflow {
         .filter { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2, meta_joined, net1_j, net2_j, ctx1, ctx2, meta_file ->
             meta_ranking.id == meta_joined.id}
         .map { meta_ranking, ranking_file, node_metrics_file, edge_metrics_file, meta_network_1, net1, meta_network_2, net2, meta_joined, net1_j, net2_j, ctx1, ctx2, meta_file ->
-            [meta_ranking.id, meta_ranking.node_metric, meta_ranking.edge_metric, meta_ranking.algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file]
+            [meta_ranking.id, meta_ranking.node_metric, meta_ranking.edge_metric, meta_ranking.algorithm, ranking_file.toString(), node_metrics_file.toString(), edge_metrics_file.toString(), net1.toString(), net2.toString(), ctx1.toString(), ctx2.toString(), meta_file.toString()]
         }
 
     if(params.data_type == "simulation"){
@@ -181,7 +181,7 @@ workflow {
                 id == meta_gt_edges.id
             }
             .map {id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes, meta_gt_edges, gt_file_edges ->
-                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes, gt_file_edges]
+                [id, node_metric, edge_metric, algorithm, ranking_file, node_metrics_file, edge_metrics_file, net1, net2, ctx1, ctx2, meta_file, gt_file_nodes.toString(), gt_file_edges.toString()]
             }
     }
 
@@ -191,15 +191,16 @@ workflow {
     create_summary_file(summary_data_collected)
 
     // Evaluation
+    if(params.evaluation){
+   	evaluation_association_scores(create_summary_file.out.summary_csv)
+    	evaluation_differential_scores(create_summary_file.out.summary_csv)
+    	evaluation_ranking_similarity(create_summary_file.out.summary_csv)
+    	evaluation_mean_shifts(create_summary_file.out.summary_csv)
 
-    evaluation_association_scores(create_summary_file.out.summary_csv)
-    evaluation_differential_scores(create_summary_file.out.summary_csv)
-    evaluation_ranking_similarity(create_summary_file.out.summary_csv)
-    evaluation_mean_shifts(create_summary_file.out.summary_csv)
-
-    if (params.data_type == 'simulation') {
-        evaluation_auc(create_summary_file.out.summary_csv)
-        evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
+    	if (params.data_type == 'simulation') {
+        	evaluation_auc(create_summary_file.out.summary_csv)
+        	evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
+    	}
     }
 
     snapshot_parameters()

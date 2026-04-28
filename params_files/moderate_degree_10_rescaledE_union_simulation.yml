@@ -2,8 +2,8 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/out/"
-work_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/work/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/filtered/moderate/degree_10_rescaledE_union/out/"
+work_dir: "/nfs/data/DyHealthNet/moDiNA_data/filtered/moderate/degree_10_rescaledE_union/work/"
 
 simulation:
   n_simulations: 3
@@ -33,3 +33,7 @@ diff_net_analysis:
   max_path_length: 2
   test_type: "nonparametric"
   multiple_testing: "bh"
+  filter_method: "degree"
+  filter_param: 10
+  filter_rule: "union"
+  filter_metric: "rescaled-E"

@@ -32,6 +32,9 @@ To specify the configurations, you can either change the parameters in the nextf
 | run_type | string | file | Determines how moDiNA configurations are specified. One of single (one fixed configuration), all (all valid combinations), or file (read from a CSV samplesheet). |
 | data_type | string | simulation | Source of input data. Either simulation (generate synthetic data via copula) or real (provide real-world data files). |
 | out_dir | path | '' | Absolute path to the directory where all pipeline outputs are written. |
+| work_dir | path | '' | Absolute path to the work directory of the Nextflow pipeline. |
+| out_dir | boolean | true | Boolean specifying whether evaluation plots should be generated. |
+
 
 ### Environment Parameters
 
