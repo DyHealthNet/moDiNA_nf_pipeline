@@ -1,12 +1,3 @@
 node_metric,edge_metric,ranking_algorithm
 STC,pre-LS,PageRank+
-DC-E,None,nodeRank
-DC-P,None,nodeRank
-PRC-P,pre-E,PageRank+
-None,post-E,edgeRank
-None,post-LS,absDimontRank
-PRC-E,pre-PE,PageRank+
-WDC-P,post-PE,PageRank+
-WDC-E,int-IS,PageRank+
-None,diff-P,DimontRank
-None,diff-P,PageRank
+STC,post-LS,PageRank+

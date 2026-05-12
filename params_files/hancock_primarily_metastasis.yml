@@ -1,0 +1,24 @@
+name_context_1: "PrimarilyMetastasis0"
+name_context_2: "PrimarilyMetastasis1"
+run_type: "file"
+data_type: "real"
+out_dir: "/storage03/larend/HANCOCK_differential_network_analysis/data/primarily_metastasis/out/"
+
+real_world_data:
+  path_context_1: "/storage03/larend/HANCOCK_differential_network_analysis/data/primarily_metastasis/primarily_metastasis_0.csv"
+  path_context_2: "/storage03/larend/HANCOCK_differential_network_analysis/data/primarily_metastasis/primarily_metastasis_1.csv"
+  path_meta: "/storage03/larend/HANCOCK_differential_network_analysis/data/primarily_metastasis/primarily_metastasis_metadata.csv"
+
+diff_net_analysis:
+  path_config: "input_samplesheet.csv"
+  edge_metric: "pre-P"
+  node_metric: "STC"
+  ranking_algorithm: "direct_node"
+  filter_method: ""
+  filter_param: 0
+  filter_metric: "pre-P"
+  filter_rule: "zero"
+  max_path_length: 2
+  test_type: "nonparametric"
+  nan_value: -99
+  multiple_testing: "bh"
