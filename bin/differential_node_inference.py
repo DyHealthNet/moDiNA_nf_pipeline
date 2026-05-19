@@ -43,6 +43,9 @@ if __name__ == '__main__':
     # Meta File
     parser.add_argument('--meta-file', type=str, required=True,
                         help='Path to meta file storing the data types of input data.')
+    # Test Type
+    parser.add_argument('--test-type', type=str, required=True,
+                        help='Type of test to perform for differential node inference (e.g., t-test, wilcoxon)')
     
     args = parser.parse_args()
 
@@ -61,6 +64,7 @@ if __name__ == '__main__':
         
         node_metric = args.node_metric
         meta = pd.read_csv(args.meta_file)
+        test_type = args.test_type
     
         print("Starting differential node inference...")
         
@@ -75,7 +79,8 @@ if __name__ == '__main__':
             correction=args.multiple_testing,
             nan_value=args.nan_value,
             num_workers=args.num_workers,
-            meta_file = meta    
+            meta_file = meta,
+            test_type = test_type
         )
             
     nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)

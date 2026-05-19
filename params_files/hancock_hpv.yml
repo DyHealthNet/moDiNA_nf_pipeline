@@ -2,12 +2,12 @@ name_context_1: "HPV0"
 name_context_2: "HPV1"
 run_type: "file"
 data_type: "real"
-out_dir: "/storage03/larend/HANCOCK_differential_network_analysis/data/hpv_association_p16/out/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/out/"
 
 real_world_data:
-  path_context_1: "/storage03/larend/HANCOCK_differential_network_analysis/data/hpv_association_p16/hpv_association_p16_0.csv"
-  path_context_2: "/storage03/larend/HANCOCK_differential_network_analysis/data/hpv_association_p16/hpv_association_p16_1.csv"
-  path_meta: "/storage03/larend/HANCOCK_differential_network_analysis/data/hpv_association_p16/hpv_association_p16_metadata.csv"
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/hpv_association_p16_0.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/hpv_association_p16_1.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/hpv_association_p16_metadata.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"

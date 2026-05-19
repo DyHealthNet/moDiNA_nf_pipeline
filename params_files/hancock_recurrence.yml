@@ -2,12 +2,12 @@ name_context_1: "Recurrence0"
 name_context_2: "Recurrence1"
 run_type: "file"
 data_type: "real"
-out_dir: "/storage03/larend/HANCOCK_differential_network_analysis/data/recurrence/out/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/recurrence/out/"
 
 real_world_data:
-  path_context_1: "/storage03/larend/HANCOCK_differential_network_analysis/data/recurrence/recurrence_0.csv"
-  path_context_2: "/storage03/larend/HANCOCK_differential_network_analysis/data/recurrence/recurrence_1.csv"
-  path_meta: "/storage03/larend/HANCOCK_differential_network_analysis/data/recurrence/recurrence_metadata.csv"
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/recurrence/recurrence_0.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/recurrence/recurrence_1.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/recurrence/recurrence_metadata.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"
