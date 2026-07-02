@@ -36,7 +36,7 @@ real_world_data:
 
 diff_net_analysis:
   max_path_length: 2
-  test_type: "nonparametric"
+  test_type: "parametric"
   multiple_testing: "bh"
   filter_method: "degree"
   filter_param: 16

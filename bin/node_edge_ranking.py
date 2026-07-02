@@ -18,6 +18,8 @@ if __name__ == '__main__':
                         help='Path to differential node scores file (CSV)')
     parser.add_argument('--edge_metric_file', type=str, required=True,
                         help='Path to differential edge scores file (CSV)')
+    parser.add_argument('--edge_node_stats_file', type=str, required=True,
+                        help='Path to per-node edge statistics file (CSV)')
     parser.add_argument('--meta_file', type=str, required=True,
                         help='Path to metadata file')
     
@@ -47,7 +49,14 @@ if __name__ == '__main__':
         edges_diff = None
     if edges_diff is not None and edges_diff.empty:
         edges_diff = None
-        
+
+    try:
+        edge_node_stats = pd.read_csv(args.edge_node_stats_file, index_col=0)
+    except pd.errors.EmptyDataError:
+        edge_node_stats = None
+    if edge_node_stats is not None and edge_node_stats.empty:
+        edge_node_stats = None
+
     meta_df = pd.read_csv(args.meta_file)
 
 
@@ -56,7 +65,8 @@ if __name__ == '__main__':
         nodes_diff=nodes_diff,
         edges_diff=edges_diff,
         ranking_alg=args.ranking_algorithm,
-        meta_file=meta_df
+        meta_file=meta_df,
+        edge_node_stats=edge_node_stats
     )
     
     #ranking_df = pd.DataFrame({"node": ranks, "rank": range(1, len(ranks) + 1)})

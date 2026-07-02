@@ -3,6 +3,7 @@ name_context_2: "NonHCUFemaleBelow40"
 run_type: "all"
 data_type: "real"
 out_dir: "/storage03/larend/SWATH_protein_differential_network_analysis/data/hcu_nonhcu_female_below_40_contexts/out/"
+work_dir: "/storage03/larend/SWATH_protein_differential_network_analysis/data/hcu_nonhcu_female_below_40_contexts/work/"
 
 real_world_data:
   path_context_1: "/storage03/larend/SWATH_protein_differential_network_analysis/data/hcu_nonhcu_female_below_40_contexts/hcu_female_data.csv"

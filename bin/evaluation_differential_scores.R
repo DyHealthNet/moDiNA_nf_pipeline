@@ -137,8 +137,23 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
 }
 
 # Valid metrics
-edge_metrics_subset = c('diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE')
+edge_metrics_subset = c('diff-P', 'int-IS-E', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
+
+node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "None")
+node_metrics_colors <- c(
+  "WDC-P"        = "#C7E9C0",
+  "WDC-E" = "#238B45",
+  "DC-P"         = "#C6DBEF",
+  "DC-E"  = "#2171B5",
+  "PRC-P"        = "#FDD0A2",
+  "PRC-E" = "#D94801",
+  "STC"          = "#807DBA",
+  "None"         = "#636363"
+)
+edge_metrics <- c("diff-L-PE", "diff-P", "diff-E", "sum-diff-PE", "sum-diff-L-PE", "int-IS-E", "None")
+edge_metrics_colors <- c("#1F78B4", "#33A02C", "#E31A1C", "#6A3D9A", "#B15928", "#FF7F00", "#636363")
+names(edge_metrics_colors) <- edge_metrics
 
 ######## ------------- Argument parser ------------- ########
 parser <- ArgumentParser(description='Differential Scores Point Plots')

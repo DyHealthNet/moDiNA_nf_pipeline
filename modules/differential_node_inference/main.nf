@@ -24,7 +24,7 @@ process differential_node_inference {
         --nan_value "${params.diff_net_analysis.nan_value}" \
         --num_workers "${task.cpus}" \
         --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}" \
-        --meta-file "${file_meta}"
+        --meta-file "${file_meta}" \
         --test-type "${params.diff_net_analysis.test_type}"
     """
     

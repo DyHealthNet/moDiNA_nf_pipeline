@@ -9,8 +9,8 @@ process differential_edge_inference {
         tuple val(meta), path(network_context_1), path(network_context_2)
 
     output: // here single tuple because we want to keep all files together as they are used together in ranking
-        tuple val(meta), path("*_edge_metrics.csv"), emit: edge_metrics
-    
+        tuple val(meta), path("*_edge_metrics.csv"), path("*_edge_node_stats.csv"), emit: edge_metrics
+
     script:
     """
         differential_edge_inference.py \

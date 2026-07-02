@@ -1,7 +1,17 @@
 // Helper function to validate filtering parameters
-def validateFilteringParams(filter_method, filter_param, filter_metric, filter_rule) {
+def validateFilteringParams(filter_method, filter_param, filter_metric, filter_rule, filter_target) {
+    def valid_filter_targets = ['context-specific', 'differential']
+    if (!valid_filter_targets.contains(filter_target)) {
+        error "ERROR: Parameter 'diff_net_analysis.filter_target' must be one of: ${valid_filter_targets.join(', ')} (or empty to skip filtering)"
+    }
+
+    // filter_method is required whenever filter_target is set
+    if (!filter_method || filter_method == '') {
+        error "ERROR: Parameter 'diff_net_analysis.filter_method' must be provided when 'filter_target' is set"
+    }
+
     def valid_filter_methods = ['degree', 'density', 'quantile']
-    
+
     if (!valid_filter_methods.contains(filter_method)) {
         error "ERROR: Parameter 'diff_net_analysis.filter_method' must be one of: ${valid_filter_methods.join(', ')}"
     }
@@ -30,6 +40,16 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
         }
     }
     
+    // filter_metric and filter_rule only apply to context-specific filtering. For differential
+    // filtering the differential network is filtered on the already-computed edge_metric, so
+    // neither a metric ('P or E') selection nor an integration rule is needed.
+    if (filter_target == 'differential') {
+        if ((filter_metric && filter_metric != '') || (filter_rule && filter_rule != '')) {
+            log.warn "WARNING: 'filter_metric' and 'filter_rule' are ignored when filter_target is 'differential'; filtering always uses the computed edge_metric."
+        }
+        return
+    }
+
     // Check filter_metric (raw-P or rescaled-E)
     def valid_filter_metrics = ['raw-P', 'rescaled-E']
     if (filter_metric && filter_metric != '') {
@@ -37,9 +57,9 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
             error "ERROR: Parameter 'diff_net_analysis.filter_metric' must be one of: ${valid_filter_metrics.join(', ')}"
         }
     } else {
-        error "ERROR: Parameter 'diff_net_analysis.filter_metric' must be provided when filter_method is set"
+        error "ERROR: Parameter 'diff_net_analysis.filter_metric' must be provided when filter_method is set and filter_target is 'context-specific'"
     }
-    
+
     // Check filter_rule (zero or union)
     def valid_filter_rules = ['zero', 'union']
     if (filter_rule && filter_rule != '') {
@@ -47,12 +67,12 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
             error "ERROR: Parameter 'diff_net_analysis.filter_rule' must be one of: ${valid_filter_rules.join(', ')}"
         }
     } else {
-        error "ERROR: Parameter 'diff_net_analysis.filter_rule' must be provided when filter_method is set"
+        error "ERROR: Parameter 'diff_net_analysis.filter_rule' must be provided when filter_method is set and filter_target is 'context-specific'"
     }
 }
 
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E', 'None']
+    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E', 'None']
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -62,7 +82,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = ['diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE', 'None']
+    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -87,12 +107,6 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether edge_metric = post-E, post-LS, post-PE and DimontRank is used -> give error
-        if (['post-E', 'post-LS', 'post-PE'].contains(edge_metric) && ranking_algo == 'DimontRank') {
-            if (warn) log.warn "WARNING: Configuration with edge_metric '${edge_metric}' and ranking_algorithm 'DimontRank' is invalid and will be skipped."
-            continue
-        }
-
         // Check whether DimontRank, absDimontRank, PageRank, edgeRank is used with any node_metric -> just give warning
         if (['DimontRank', 'absDimontRank', 'PageRank', 'edgeRank'].contains(ranking_algo)) {
             if (node_metric != '') {
@@ -116,6 +130,7 @@ def removeInvalidConfigurations(configs, warn = true){
                 continue
             }
         }
+
         validConfigs.add(config)
     }
 
@@ -211,16 +226,17 @@ workflow validate_params {
     }
 
     // Validate filtering
-    if (params.diff_net_analysis.filter_method && params.diff_net_analysis.filter_method != '') {
+    if (params.diff_net_analysis.filter_target && params.diff_net_analysis.filter_target != '') {
         validateFilteringParams(
             params.diff_net_analysis.filter_method,
             params.diff_net_analysis.filter_param,
             params.diff_net_analysis.filter_metric,
             params.diff_net_analysis.filter_rule,
+            params.diff_net_analysis.filter_target,
         )
         log.info "✓ All filtering parameters are valid"
     } else {
-        log.info "No filtering method provided, filtering will not be applied"
+        log.info "No filter_target provided, filtering will not be applied"
     }
 
     // Validate differential network analysis parameters
@@ -241,8 +257,8 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-E', 'PRC-P', 'PRC-E']
-        def valid_edge_metrics = ['diff-P', 'pre-E', 'post-E', 'int-IS', 'pre-LS', 'post-LS', 'pre-PE', 'post-PE']
+        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E']
+        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank', 'edgeRank']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
@@ -298,14 +314,14 @@ workflow validate_params {
 
     // Validate additional differential network analysis parameters
 
-    // Check if any configuration uses int-IS
+    // Check if any configuration uses int-IS-E
     def uses_int_is = configs.any { node_metric, edge_metric, ranking_algo ->
-        edge_metric == 'int-IS'
+        edge_metric == 'int-IS-E'
     }
-    
+
     if (uses_int_is) {
         if (!params.diff_net_analysis.max_path_length || params.diff_net_analysis.max_path_length == '') {
-            error "ERROR: Parameter 'diff_net_analysis.max_path_length' must be provided when using int-IS as edge_metric"
+            error "ERROR: Parameter 'diff_net_analysis.max_path_length' must be provided when using 'int-IS-E' as edge_metric"
         }
         // Check whether it is an integer [0, 4]
         if (!(params.diff_net_analysis.max_path_length instanceof Number) || params.diff_net_analysis.max_path_length != params.diff_net_analysis.max_path_length.intValue() || params.diff_net_analysis.max_path_length < 0 || params.diff_net_analysis.max_path_length > 4) {

@@ -4,6 +4,7 @@ include {simulate_copula} from './modules/simulate_copula/main.nf'
 include {validate_params} from './subworkflows/validate_params/main.nf'
 include {context_network_inference} from './modules/context_network_inference/main.nf'
 include {filter_context_networks} from './modules/filter_context_networks/main.nf'
+include {filter_differential_network} from './modules/filter_differential_network/main.nf'
 include {differential_node_inference} from './modules/differential_node_inference/main.nf'
 include {differential_edge_inference} from './modules/differential_edge_inference/main.nf'
 include {rescaling_networks} from './modules/rescaling_networks/main.nf'
@@ -87,7 +88,7 @@ workflow {
     rescaled_network_context_2 = rescaling_networks.out.rescaled_network_context_2
 
     // ----------- Filtering of context-specific networks (optional) -----------
-    if (params.diff_net_analysis.filter_method) {
+    if (params.diff_net_analysis.filter_target == 'context-specific') {
         // Join all inputs by meta.id
         filter_input = rescaled_network_context_1
             .join(rescaled_network_context_2, by: 0)
@@ -132,16 +133,23 @@ workflow {
     
     differential_edge_inference(diff_edge_input)
 
+    // ----------- Filtering of the differential network (optional) -----------
+    diff_edge_metrics = differential_edge_inference.out.edge_metrics
+    if (params.diff_net_analysis.filter_target == 'differential') {
+        filter_differential_network(diff_edge_metrics)
+        diff_edge_metrics = filter_differential_network.out.edge_metrics
+    }
+
     // ----------- Ranking nodes / edges -----------
     // Combine all algorithm configs with differential network results
     ranking_input = validate_params.out.config_combs
         .combine(differential_node_inference.out.node_metrics)
-        .combine(differential_edge_inference.out.edge_metrics)
-        .filter { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge,edge_file ->
+        .combine(diff_edge_metrics)
+        .filter { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file, stats_file ->
             node_m == meta_node.node_metric && edge_m == meta_edge.edge_metric && meta_node.id == meta_edge.id
         }
-        .map { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file ->
-            [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, file_meta]
+        .map { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file, stats_file ->
+            [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, stats_file, file_meta]
         }
     
     node_edge_ranking(ranking_input)

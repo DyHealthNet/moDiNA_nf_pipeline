@@ -6,7 +6,7 @@ out_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/out/"
 work_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/work/"
 
 simulation:
-  n_simulations: 3
+  n_simulations: 10
   n_bi: 100
   n_cont: 100
   n_cat: 100
@@ -31,5 +31,5 @@ simulation:
 
 diff_net_analysis:
   max_path_length: 2
-  test_type: "nonparametric"
+  test_type: "parametric"
   multiple_testing: "bh"

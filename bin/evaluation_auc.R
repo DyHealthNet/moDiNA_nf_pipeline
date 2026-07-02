@@ -41,11 +41,18 @@ calculate_AUC_for_row <- function(ground_truth_file, ranking_file, row_num, node
 
 
 node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "None")
-node_metrics_colors <- c("#8DD3C7", "#41B6C4", "#F1B6DA", "#DD1C77","#CCCCCC", "#636363", "#FFD700","#FF6B6B")
-names(node_metrics_colors) <- node_metrics
-  
-edge_metrics <- c("pre-LS", "post-LS", "diff-P", "pre-E", "post-E", "pre-PE", "post-PE", "int-IS", "None")
-edge_metrics_colors <- c("#A6CEE3", "#1F78B4", "#33A02C","#FB9A99", "#E31A1C", "#CAB2D6","#6A3D9A" , "#FFFF99", "#B15928")
+node_metrics_colors <- c(
+  "WDC-P"        = "#C7E9C0",
+  "WDC-E" = "#238B45",
+  "DC-P"         = "#C6DBEF",
+  "DC-E"  = "#2171B5",
+  "PRC-P"        = "#FDD0A2",
+  "PRC-E" = "#D94801",
+  "STC"          = "#807DBA",
+  "None"         = "#636363"
+)
+edge_metrics <- c("diff-L-PE", "diff-P", "diff-E", "sum-diff-PE", "sum-diff-L-PE", "int-IS-E", "None")
+edge_metrics_colors <- c("#1F78B4", "#33A02C", "#E31A1C", "#6A3D9A", "#B15928", "#FF7F00", "#636363")
 names(edge_metrics_colors) <- edge_metrics
 
 ######## ------------- Argument parser ------------- ########

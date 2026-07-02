@@ -6,7 +6,7 @@ out_dir: "/nfs/data/DyHealthNet/moDiNA_data/weak/out/"
 work_dir: "/nfs/data/DyHealthNet/moDiNA_data/weak/work/"
 
 simulation:
-  n_simulations: 3
+  n_simulations: 10
   n_bi: 100
   n_cont: 100
   n_cat: 100
@@ -26,10 +26,10 @@ simulation:
   n_both_bi_cont: 3
   n_both_bi_cat: 3
   n_both_cont_cat: 3
-  shift: 0.1
+  shift: 0.2
   corr: 0.1
 
 diff_net_analysis:
   max_path_length: 2
-  test_type: "nonparametric"
+  test_type: "parametric"
   multiple_testing: "bh"

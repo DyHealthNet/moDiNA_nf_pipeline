@@ -3,6 +3,7 @@ name_context_2: "HPV1"
 run_type: "file"
 data_type: "real"
 out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/out/"
+work_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/work/"
 
 real_world_data:
   path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hpv_association_p16/hpv_association_p16_0.csv"
@@ -14,6 +15,7 @@ diff_net_analysis:
   edge_metric: "pre-P"
   node_metric: "STC"
   ranking_algorithm: "direct_node"
+  filter_target: ""
   filter_method: ""
   filter_param: 0
   filter_metric: "pre-P"
