@@ -1,0 +1,26 @@
+name_context_1: "Male"
+name_context_2: "Female"
+run_type: "file"
+data_type: "real"
+out_dir: "/home/larend/DyHealthNet/modina/data/hancock/sex/out/"
+work_dir: "/home/larend/DyHealthNet/modina/data/hancock/sex/work/"
+
+real_world_data:
+  path_context_1: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_0.csv"
+  path_context_2: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_1.csv"
+  path_meta: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_metadata.csv"
+
+diff_net_analysis:
+  path_config: "input_samplesheet.csv"
+  edge_metric: "pre-P"
+  node_metric: "STC"
+  ranking_algorithm: "direct_node"
+  filter_target: ""
+  filter_method: ""
+  filter_param: 0
+  filter_metric: "pre-P"
+  filter_rule: "zero"
+  max_path_length: 2
+  test_type: "nonparametric"
+  nan_value: -99
+  multiple_testing: "bh"

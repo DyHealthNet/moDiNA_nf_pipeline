@@ -1,0 +1,26 @@
+name_context_1: "Male"
+name_context_2: "Female"
+run_type: "file"
+data_type: "real"
+out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/out/"
+work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/work/"
+
+real_world_data:
+  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/male_data.csv"
+  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/female_data.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/meta_sex.csv"
+
+diff_net_analysis:
+  path_config: "input_samplesheet.csv"
+  edge_metric: ""
+  node_metric: ""
+  ranking_algorithm: ""
+  filter_target: ""
+  filter_method: ""
+  filter_param: 0
+  filter_metric: ""
+  filter_rule: ""
+  max_path_length: 2
+  test_type: "nonparametric"
+  nan_value: -89
+  multiple_testing: "bh"

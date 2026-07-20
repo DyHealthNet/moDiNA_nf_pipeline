@@ -24,8 +24,10 @@ if __name__ == '__main__':
                         help='Number of categorical nodes to simulate')
 
     # Sample size
-    parser.add_argument('--n_samples', type=int, required=True,
-                        help='Number of samples per context')
+    parser.add_argument('--n_samples_1', type=int, required=True,
+                        help='Number of samples for the first context')
+    parser.add_argument('--n_samples_2', type=int, required=True,
+                        help='Number of samples for the second context')
 
     # Mean shift nodes
     parser.add_argument('--n_shift_cont', type=int, required=True,
@@ -81,7 +83,8 @@ if __name__ == '__main__':
                            n_bi =args.n_bi,
                            n_cont =args.n_cont,
                            n_cat = args.n_cat,
-                           n_samples =args.n_samples,
+                           n_samples_1 =args.n_samples_1,
+                           n_samples_2 =args.n_samples_2,
                            n_shift_cont =args.n_shift_cont,
                            n_shift_bi =args.n_shift_bi,
                            n_shift_cat = args.n_shift_cat,

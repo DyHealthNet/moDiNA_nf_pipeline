@@ -136,7 +136,7 @@ def removeInvalidConfigurations(configs, warn = true){
 
     def uniqueConfigs = validConfigs.unique()
 
-    return validConfigs
+    return uniqueConfigs
 }
 
 workflow validate_params {
@@ -174,7 +174,7 @@ workflow validate_params {
     
     // Validate simulation parameters if data_type is 'simulation'
     if (params.data_type == 'simulation') {
-        integer_params = ['n_simulations','n_bi', 'n_cont', 'n_cat', 'n_samples', 'n_shift_cont', 'n_shift_bi', 'n_shift_cat','n_corr_cont_cont', 'n_corr_bi_bi', 'n_corr_cat_cat', 'n_corr_bi_cat', 'n_corr_cont_cat', 'n_corr_bi_cont', 'n_both_cont_cont', 'n_both_bi_bi', 'n_both_cat_cat', 'n_both_bi_cat', 'n_both_cont_cat', 'n_both_bi_cont']
+        integer_params = ['n_simulations','n_bi', 'n_cont', 'n_cat', 'n_samples_1', 'n_samples_2', 'n_shift_cont', 'n_shift_bi', 'n_shift_cat','n_corr_cont_cont', 'n_corr_bi_bi', 'n_corr_cat_cat', 'n_corr_bi_cat', 'n_corr_cont_cat', 'n_corr_bi_cont', 'n_both_cont_cont', 'n_both_bi_bi', 'n_both_cat_cat', 'n_both_bi_cat', 'n_both_cont_cat', 'n_both_bi_cont']
         integer_params.each { param_name ->
             if (params.simulation[param_name] == null || !(params.simulation[param_name] instanceof Number) || params.simulation[param_name] < 0 || params.simulation[param_name] != params.simulation[param_name].intValue()) {
                 error "ERROR: Parameter 'simulation.${param_name}' must be a non-negative integer (>= 0)"

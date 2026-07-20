@@ -1,0 +1,26 @@
+name_context_1: "HCU"
+name_context_2: "no-HCU"
+run_type: "file"
+data_type: "real"
+out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/out/"
+work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/work/"
+
+real_world_data:
+  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/hcu_data.csv"
+  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/no_hcu_data.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/meta_hcu.csv"
+
+diff_net_analysis:
+  path_config: "input_samplesheet.csv"
+  edge_metric: ""
+  node_metric: ""
+  ranking_algorithm: ""
+  filter_target: ""
+  filter_method: ""
+  filter_param: 0
+  filter_metric: ""
+  filter_rule: ""
+  max_path_length: 2
+  test_type: "nonparametric"
+  nan_value: -89
+  multiple_testing: "bh"

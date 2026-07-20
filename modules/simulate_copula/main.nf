@@ -23,7 +23,8 @@ process simulate_copula {
             --n_bi "${params.simulation.n_bi}" \
             --n_cont "${params.simulation.n_cont}" \
             --n_cat "${params.simulation.n_cat}" \
-            --n_samples "${params.simulation.n_samples}" \
+            --n_samples_1 "${params.simulation.n_samples_1}" \
+            --n_samples_2 "${params.simulation.n_samples_2}" \
             --n_shift_cont "${params.simulation.n_shift_cont}" \
             --n_shift_bi "${params.simulation.n_shift_bi}" \
             --n_shift_cat "${params.simulation.n_shift_cat}" \

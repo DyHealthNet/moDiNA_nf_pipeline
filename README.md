@@ -51,7 +51,8 @@ To specify the configurations, you can either change the parameters in the nextf
 | `simulation.n_bi` | `integer` | `50` | Number of binary nodes to simulate. |
 | `simulation.n_cont` | `integer` | `50` | Number of continuous nodes to simulate. |
 | `simulation.n_cat` | `integer` | `50` | Number of categorical nodes to simulate. |
-| `simulation.n_samples` | `integer` | `500` | Number of samples (observations) per context. |
+| `simulation.n_samples_1` | `integer` | `500` | Number of samples (observations) for the first context. |
+| `simulation.n_samples_2` | `integer` | `500` | Number of samples (observations) for the second context. |
 | `simulation.n_shift_cont` | `integer` | `4` | Number of continuous nodes with an artificially introduced mean shift between contexts. |
 | `simulation.n_shift_bi` | `integer` | `4` | Number of binary nodes with an artificially introduced mean shift between contexts. |
 | `simulation.n_shift_cat` | `integer` | `4` | Number of categorical nodes with an artificially introduced mean shift between contexts. |
