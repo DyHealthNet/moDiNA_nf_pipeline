@@ -31,7 +31,7 @@ edge_metrics <- c("diff-L-PE", "diff-P", "diff-E", "sum-diff-PE", "sum-diff-L-PE
 edge_metrics_colors <- c("#1F78B4", "#33A02C", "#E31A1C", "#6A3D9A", "#B15928", "#FF7F00", "#636363")
 names(edge_metrics_colors) <- edge_metrics
 
-algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'nodeRank', 'edgeRank')
+algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'nodeRank')
 algorithm_colors <- c("#4B0082", "#9370DB", "#004225", "#228B22", "#8B0000", "#FF7F50")
 names(algorithm_colors) <- algorithms
 
@@ -257,15 +257,9 @@ summary_file <- args$summary_file
 ######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
-# Store edge ranking independently
-edge_ranking_dt <- summary_dt[algorithm == "edgeRank",]
-
-# Remove edgeRank ranking
-summary_dt <- summary_dt[summary_dt$algorithm != "edgeRank",]
-
 # Calculate ROC statistics for each row
-summary_dt[, roc_obj := mapply(calculate_ROC_statistics, 
-                           ground_truth_nodes, 
+summary_dt[, roc_obj := mapply(calculate_ROC_statistics,
+                           ground_truth_nodes,
                            ranking_file,
                            SIMPLIFY = FALSE)]
 
@@ -280,23 +274,6 @@ summary_dt[, `:=`(
 ground_truth <- summary_dt$ground_truth_nodes[1]
 ground_truth <- fread(ground_truth)
 n_gt_nodes <- nrow(ground_truth)
-
-# TODO: implement plots for ground truth edges
-#if (nrow(edge_ranking_dt) > 0) {
-#  edge_ranking_dt[, roc_obj := mapply(calculate_ROC_statistics, 
-#                                  ground_truth_edges, 
-#                                  ranking_file,
-#                                  node_ranking = FALSE,
-#                                  SIMPLIFY = FALSE)]
-#  
-#  # Create columns for tpr and fpr
-#  edge_ranking_dt[, `:=`(
-#    tpr = lapply(roc_obj, function(r) rev(r$sensitivities)),
-#    fpr = lapply(roc_obj, function(r) rev(1 - r$specificities))
-#  )]
-  
-#  summary_dt <- rbind(summary_dt, edge_ranking_dt)
-#}
 
 for(ranking_alg in algorithms) {
   # Subset data

@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     """Parse command line arguments for computing rankings."""
     parser = argparse.ArgumentParser(
-        description='Compute node and/or edge rankings from differential network.',
+        description='Compute node rankings from differential network.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -25,8 +25,8 @@ if __name__ == '__main__':
     
     # Ranking algorithm
     parser.add_argument('--ranking_algorithm', type=str, required=True,
-                        choices=['PageRank+', 'PageRank', 'absDimontRank', 
-                                'DimontRank', 'nodeRank', 'edgeRank'],
+                        choices=['PageRank+', 'PageRank', 'absDimontRank',
+                                'DimontRank', 'nodeRank'],
                         help='Ranking algorithm to compute')
     
     # Output

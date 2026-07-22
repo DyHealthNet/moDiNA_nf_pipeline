@@ -8,7 +8,7 @@ include {filter_differential_network} from './modules/filter_differential_networ
 include {differential_node_inference} from './modules/differential_node_inference/main.nf'
 include {differential_edge_inference} from './modules/differential_edge_inference/main.nf'
 include {rescaling_networks} from './modules/rescaling_networks/main.nf'
-include {node_edge_ranking} from './modules/node_edge_ranking/main.nf'
+include {node_ranking} from './modules/node_ranking/main.nf'
 include {evaluation_auc} from './modules/evaluation_auc/main.nf'
 include {evaluation_association_scores} from './modules/evaluation_association_scores/main.nf'
 include {evaluation_differential_scores} from './modules/evaluation_differential_scores/main.nf'
@@ -152,10 +152,10 @@ workflow {
             [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, stats_file, file_meta]
         }
     
-    node_edge_ranking(ranking_input)
+    node_ranking(ranking_input)
 
     // ----------- Create summary file -----------
-    summary_data = node_edge_ranking.out
+    summary_data = node_ranking.out
         .map { meta, node_metrics_file, edge_metrics_file, ranking_file  ->
             [meta, ranking_file, node_metrics_file, edge_metrics_file]
         }

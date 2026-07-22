@@ -66,38 +66,20 @@ summary_file <- args$summary_file
 ######## ------------- Process data ------------- ########
 summary_dt <- fread(summary_file)
 
-# Store edge ranking independently
-edge_ranking_dt <- summary_dt[algorithm == "edgeRank",]
-
-# Remove edgeRank ranking
-summary_dt <- summary_dt[summary_dt$algorithm != "edgeRank",]
-
 # Calculate AUC for each row with row number tracking
-summary_dt[, auc := mapply(calculate_AUC_for_row, 
-                           ground_truth_nodes, 
+summary_dt[, auc := mapply(calculate_AUC_for_row,
+                           ground_truth_nodes,
                            ranking_file,
                            row_num = .I,  # Pass row index
                            SIMPLIFY = TRUE)]
 
-if (nrow(edge_ranking_dt) > 0) {
-  edge_ranking_dt[, auc := mapply(calculate_AUC_for_row, 
-                                  ground_truth_edges, 
-                                  ranking_file,
-                                  node_ranking = FALSE,
-                                  row_num = .I,  # Pass row index
-                                  SIMPLIFY = TRUE)]
-  
-  summary_dt <- rbind(summary_dt, edge_ranking_dt)
-}
-
 # Replace names
 #summary_dt[algorithm == "nodeRank", algorithm := "Direct Node"]
-#summary_dt[algorithm == "edgeRank", algorithm := "Direct Edge"]
 summary_dt[node_metric == "", node_metric := "None"]
 summary_dt[edge_metric == "", edge_metric := "None"]
 
 # Level algorithms
-summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "nodeRank", "edgeRank"))
+summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "nodeRank"))
 
 # Group by configuration and calculate mean/sd AUC
 results <- summary_dt[, .(

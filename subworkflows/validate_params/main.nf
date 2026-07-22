@@ -92,7 +92,7 @@ def validateEdgeMetric(edge_metric) {
 }
 
 def validateRankingAlgorithm(ranking_algorithm) {
-    def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank', 'edgeRank']
+    def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
     if (!ranking_algorithm || ranking_algorithm == '') {
         error "ERROR: Parameter 'ranking_algorithm' must be provided"
     }
@@ -107,8 +107,8 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether DimontRank, absDimontRank, PageRank, edgeRank is used with any node_metric -> just give warning
-        if (['DimontRank', 'absDimontRank', 'PageRank', 'edgeRank'].contains(ranking_algo)) {
+        // Check whether DimontRank, absDimontRank, PageRank is used with any node_metric -> just give warning
+        if (['DimontRank', 'absDimontRank', 'PageRank'].contains(ranking_algo)) {
             if (node_metric != '') {
                 if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
                 config[0] = ''
@@ -259,7 +259,7 @@ workflow validate_params {
     if (params.run_type == 'all'){
         def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E']
         def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P']
-        def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank', 'edgeRank']
+        def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
 

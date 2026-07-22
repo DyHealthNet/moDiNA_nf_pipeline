@@ -290,8 +290,7 @@ for (sim in 1:simulations){
     gt_dict <- setNames(gt_table$description, gt_table$node)
   }
   
-  # For now, only take node rankings
-  node_rankings <- sim_summary[algorithm!='edgeRank', ]
+  node_rankings <- sim_summary
   
   # Edge metrics
   for (metric in unique(node_rankings$edge_metric)){

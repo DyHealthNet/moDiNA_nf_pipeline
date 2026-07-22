@@ -1,4 +1,4 @@
-process node_edge_ranking {
+process node_ranking {
     conda params.conda_modina_env
 
     publishDir "${params.out_dir}/rankings", mode: 'copy'
@@ -14,7 +14,7 @@ process node_edge_ranking {
 
     script:
     """
-        node_edge_ranking.py \\
+        node_ranking.py \\
             --node_metric_file "${node_rankings}" \\
             --edge_metric_file "${edge_rankings}" \\
             --edge_node_stats_file "${edge_node_stats}" \\

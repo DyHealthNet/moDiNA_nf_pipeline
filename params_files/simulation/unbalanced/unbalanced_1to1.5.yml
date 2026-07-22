@@ -1,16 +1,16 @@
 name_context_1: "Context1"
 name_context_2: "Context2"
-run_type: "all"
+run_type: "file"
 data_type: "simulation"
-out_dir: "/home/larend/DyHealthNet/modina/data/simulation/moderate/moderate_simulation_heavy_unbalanced_samples/out/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/unbalanced/1to1.5/"
 
 simulation:
   n_simulations: 5
   n_bi: 100
   n_cont: 100
   n_cat: 100
-  n_samples_1: 100
-  n_samples_2: 1000
+  n_samples_1: 300
+  n_samples_2: 450
   n_shift_cont: 5
   n_shift_bi: 5
   n_shift_cat: 5
@@ -30,6 +30,7 @@ simulation:
   corr: 0.3
 
 diff_net_analysis:
+  path_config: "input_samplesheet.csv"
   max_path_length: 2
   test_type: "parametric"
   multiple_testing: "bh"

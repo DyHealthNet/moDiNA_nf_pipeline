@@ -2,11 +2,10 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/weak/out/"
-work_dir: "/nfs/data/DyHealthNet/moDiNA_data/weak/work/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/weak/"
 
 simulation:
-  n_simulations: 10
+  n_simulations: 5
   n_bi: 100
   n_cont: 100
   n_cat: 100

@@ -1,0 +1,187 @@
+---
+title: "moDiNA Simulation Evaluation — Balanced vs Unbalanced AUC comparison"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(pROC)
+library(data.table)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+```
+
+This report compares the node-ranking AUC across two families of simulations:
+
+* **Balanced** sample-size simulations (`run_balanced_simulations.py`), where both
+  contexts share the same number of samples (n = 100, 300, 500, 1000).
+* **Unbalanced** sample-size simulations (`run_unbalanced_simulations.py`), where
+  Context 1 is fixed at 300 samples and Context 2 grows with the ratio (1:1 → 1:10).
+
+AUC is computed exactly as in `bin/evaluation_auc.R`: how well a config's node ranking
+separates the ground-truth (perturbed) nodes from the rest. The two families are shown
+as a stacked two-panel heatmap — **Panel A: Balanced**, **Panel B: Unbalanced**.
+
+```{r config}
+BALANCED_BASE   <- "/nfs/data/DyHealthNet/moDiNA_data/balanced"
+UNBALANCED_BASE <- "/nfs/data/DyHealthNet/moDiNA_data/unbalanced"
+
+# --- AUC helpers (mirrors bin/evaluation_auc.R) ---
+calculate_AUC_per_simulation <- function(ranking, ground_truth, node_ranking = TRUE) {
+  ranking <- ranking[order(rank)]
+  if (node_ranking) {
+    ranking[, is_ground_truth := ifelse(node %in% ground_truth$node, 1, 0)]
+  } else {
+    ranking[, is_ground_truth := ifelse(edge %in% ground_truth$edge, 1, 0)]
+  }
+  roc_obj <- roc(ranking$is_ground_truth, ranking$rank, quiet = TRUE)
+  return(auc(roc_obj))
+}
+
+calculate_AUC_for_row <- function(ground_truth_file, ranking_file, row_num, node_ranking = TRUE) {
+  tryCatch({
+    ground_truth <- fread(ground_truth_file)
+    ranking <- fread(ranking_file)
+    return(calculate_AUC_per_simulation(ranking, ground_truth, node_ranking))
+  }, error = function(e) {
+    cat("\n=== ERROR in row", row_num, "===\n")
+    cat("Ground truth file:", ground_truth_file, "\n")
+    cat("Ranking file:", ranking_file, "\n")
+    cat("Error message:", e$message, "\n")
+    cat("========================\n")
+    return(NA_real_)
+  })
+}
+
+# summary.csv stores absolute work/ paths that may be cleaned; the same files are
+# also published under each out_dir. Prefer the published copy, fall back to the
+# recorded path if the reconstruction is missing.
+resolve_path <- function(out_dir, subdir, recorded) {
+  cand <- file.path(out_dir, subdir, basename(recorded))
+  ifelse(file.exists(cand), cand, recorded)
+}
+
+# --- Setting discovery (one helper per run family) ---
+# Balanced dirs are named "n<samples>" (equal samples per context).
+discover_balanced <- function(base) {
+  dirs <- list.dirs(base, recursive = FALSE, full.names = TRUE)
+  dirs <- dirs[grepl("/n[0-9]+$", dirs)]
+  s <- data.table(out_dir = dirs, label = basename(dirs))
+  s[, order_key := as.numeric(sub("n", "", label))]
+  s[, display  := as.character(order_key)]  # x-axis tick, e.g. "300"
+  s[order(order_key)]
+}
+
+# Unbalanced dirs are named "1to<ratio>" (Context1 fixed, Context2 scaled).
+discover_unbalanced <- function(base) {
+  dirs <- list.dirs(base, recursive = FALSE, full.names = TRUE)
+  dirs <- dirs[grepl("/1to[0-9.]+$", dirs)]
+  s <- data.table(out_dir = dirs, label = basename(dirs))
+  s[, order_key := as.numeric(sub("1to", "", label))]
+  s[, display  := sub("1to", "1:", label)]  # x-axis tick, e.g. "1:10"
+  s[order(order_key)]
+}
+
+settings_bal <- discover_balanced(BALANCED_BASE)
+settings_unb <- discover_unbalanced(UNBALANCED_BASE)
+
+kable(settings_bal[, .(label, samples_per_context = order_key, out_dir)],
+      caption = "Discovered balanced settings")
+kable(settings_unb[, .(label, ratio = order_key, out_dir)],
+      caption = "Discovered unbalanced settings")
+```
+
+```{r build-results}
+# Load every summary.csv for a settings table, score AUC per row, and aggregate.
+# Returns one row per (setting × node_metric × edge_metric × algorithm) with an
+# ordered `setting` factor (levels by order_key, labels = the family's display ticks).
+build_results <- function(settings, run_type) {
+  dt_list <- lapply(seq_len(nrow(settings)), function(i) {
+    out_dir <- settings$out_dir[i]
+    summary_file <- file.path(out_dir, "summary.csv")
+    if (!file.exists(summary_file)) {
+      warning("Missing summary.csv for ", out_dir)
+      return(NULL)
+    }
+    d <- fread(summary_file)
+    d[, ranking_file := mapply(resolve_path, out_dir, "rankings", ranking_file)]
+    d[, ground_truth_nodes := mapply(resolve_path, out_dir, "copula_simulation", ground_truth_nodes)]
+    d[, auc := mapply(calculate_AUC_for_row, ground_truth_nodes, ranking_file,
+                      row_num = .I, SIMPLIFY = TRUE)]
+    d[, `:=`(setting = settings$label[i], order_key = settings$order_key[i])]
+    d
+  })
+  dt <- rbindlist(dt_list, use.names = TRUE, fill = TRUE)
+
+  # Normalise empty metric labels (as in evaluation_auc.R)
+  dt[node_metric == "", node_metric := "None"]
+  dt[edge_metric == "", edge_metric := "None"]
+
+  results <- dt[, .(
+    mean_auc = mean(auc, na.rm = TRUE),
+    sd_auc   = sd(auc, na.rm = TRUE),
+    n        = .N
+  ), by = .(setting, order_key, node_metric, edge_metric, algorithm)]
+
+  # Ordered factors: settings by order_key (shown as the family's display tick),
+  # edge metric by appearance.
+  lvl <- settings[order(order_key)]
+  results[, setting := factor(setting, levels = lvl$label, labels = lvl$display)]
+  results[, edge_metric := factor(edge_metric, levels = unique(edge_metric))]
+  results[, run_type := run_type]
+  setorder(results, order_key, edge_metric)
+  results
+}
+
+res_bal <- build_results(settings_bal, "Balanced")
+res_unb <- build_results(settings_unb, "Unbalanced")
+```
+
+## AUC heatmap: Balanced (A) vs Unbalanced (B)
+
+```{r heatmap, fig.width=8, fig.height=8}
+make_heatmap <- function(results, x_label) {
+  ggplot(results, aes(x = setting, y = edge_metric, fill = mean_auc)) +
+    geom_tile(color = "black") +
+    geom_text(aes(label = sprintf('%.2f', mean_auc)), size = 3) +
+    facet_grid(algorithm ~ ., scales = "free", space = "free") +
+    scale_fill_gradient(low = 'white', high = '#a32e28', name = 'Mean AUC',
+                        guide = guide_colorbar(barwidth = 1.5, barheight = 10),
+                        limits = c(0, 1.0)) +
+    labs(x = x_label, y = "Edge Metric") +
+    theme_minimal() +
+    theme(
+      panel.grid = element_blank(),
+      panel.spacing.x = unit(1, 'lines'),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      strip.text.y = element_text(size = 10, angle = 0),
+      strip.text.x = element_text(size = 10),
+      axis.title.x = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      strip.background = element_rect(fill = 'grey90', color = 'black', linewidth = 0.5)
+    )
+}
+
+p_bal <- make_heatmap(res_bal, "Samples per context (n)")
+p_unb <- make_heatmap(res_unb, "Sample-size ratio (Context1:Context2)")
+
+p_combined <- (p_bal / p_unb) +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(guides = "collect")
+print(p_combined)
+ggsave("balanced_vs_unbalanced_auc_heatmap.png", plot = p_combined,
+       width = 8, height = 8, dpi = 300)
+```
+
+## Numeric summary (mean ± sd AUC over simulations)
+
+```{r table}
+res_all <- rbindlist(list(res_bal, res_unb), use.names = TRUE, fill = TRUE)
+tab <- res_all[, .(run_type, setting, edge_metric, node_metric, algorithm,
+                   `mean AUC` = sprintf('%.3f', mean_auc),
+                   `sd AUC`   = sprintf('%.3f', sd_auc),
+                   n_sim = n)]
+kable(tab, caption = "AUC per run type × setting × edge metric")
+```
