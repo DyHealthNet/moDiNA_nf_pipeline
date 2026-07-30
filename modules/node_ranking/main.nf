@@ -1,7 +1,7 @@
 process node_ranking {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}/rankings", mode: 'copy'
+    publishDir "${params.out_dir}/rankings", mode: 'symlink'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}"
 

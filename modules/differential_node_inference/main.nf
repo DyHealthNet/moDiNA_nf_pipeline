@@ -1,7 +1,7 @@
 process differential_node_inference {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}/differential_node_inference", mode: 'copy'
+    publishDir "${params.out_dir}/differential_node_inference", mode: 'symlink'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.node_metric}"
 

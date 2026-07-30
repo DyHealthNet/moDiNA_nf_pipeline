@@ -1,7 +1,7 @@
 process simulate_copula {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}/copula_simulation", mode: 'copy'
+    publishDir "${params.out_dir}/copula_simulation", mode: 'symlink'
 
     when: params.data_type == 'simulation'
 

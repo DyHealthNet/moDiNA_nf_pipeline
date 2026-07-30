@@ -1,7 +1,7 @@
 process create_summary_file {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}", mode: 'copy'
+    publishDir "${params.out_dir}", mode: 'symlink'
     
     input:
     val summary_data

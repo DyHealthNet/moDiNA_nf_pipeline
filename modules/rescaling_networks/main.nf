@@ -1,7 +1,7 @@
 process rescaling_networks {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}/rescaled_networks", mode: 'copy'
+    publishDir "${params.out_dir}/rescaled_networks", mode: 'symlink'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}"
 

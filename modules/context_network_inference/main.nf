@@ -1,7 +1,7 @@
 process context_network_inference {
     conda params.conda_modina_env
 
-    publishDir "${params.out_dir}/context_network_inference", mode: 'copy'
+    publishDir "${params.out_dir}/context_network_inference", mode: 'symlink'
 
     tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}"
 

@@ -1,6 +1,6 @@
 process evaluation_association_scores {
     conda params.conda_eval_env
-    publishDir "${params.out_dir}/evaluation_association_scores", mode: 'copy'
+    publishDir "${params.out_dir}/evaluation_association_scores", mode: 'symlink'
 
     input:
     path summary_file
