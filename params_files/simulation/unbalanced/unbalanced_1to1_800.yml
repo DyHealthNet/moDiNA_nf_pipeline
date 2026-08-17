@@ -2,15 +2,15 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "file"
 data_type: "simulation"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/split/1to1/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/unbalanced/1to1_800/"
 
 simulation:
   n_simulations: 5
   n_bi: 100
   n_cont: 100
   n_cat: 100
-  n_samples_1: 800
-  n_samples_2: 800
+  n_samples_1: 400
+  n_samples_2: 400
   n_shift_cont: 5
   n_shift_bi: 5
   n_shift_cat: 5

@@ -22,7 +22,7 @@ ground_truth_palette <- c(
 # Create dictionary for ground truth edges
 create_gt_edge_dict <- function(path, mode){
   gt_table <- fread(path)
-  colnames(gt_table) <- c("node", "description")
+  setnames(gt_table, 1:2, c("node", "description"))  # rename by position: tolerates extra trailing columns
   gt_table$description <- str_trim(gt_table$description)
   
   gt_dict <- list()
@@ -78,7 +78,7 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
       
       # Read ground truths
       gt_table <- fread(config$groundtruth)
-      colnames(gt_table) <- c("node", "description")
+      setnames(gt_table, 1:2, c("node", "description"))  # rename by position: tolerates extra trailing columns
       gt_table$description <- str_trim(gt_table$description)
       
       if (mode == "edges") {
@@ -87,7 +87,7 @@ diff_scores_jitter <- function(configs, metric, mode = 'edges', study = 'simulat
       } else{
         # Create dictionary containing all ground truth nodes
         gt_table <- fread(config$groundtruth)
-        colnames(gt_table) <- c("node", "description")
+        setnames(gt_table, 1:2, c("node", "description"))  # rename by position: tolerates extra trailing columns
         gt_table$description <- str_trim(gt_table$description)
         gt_dict <- setNames(gt_table$description, gt_table$node)
         colnames(scores)[1] <- "node"

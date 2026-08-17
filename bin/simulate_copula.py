@@ -70,6 +70,9 @@ if __name__ == '__main__':
                         help='Magnitude of the mean shift')
     parser.add_argument('--corr', type=float, required=True,
                         help='Magnitude of the correlation difference (measured as correlation coefficient between 0 and 1)')
+    parser.add_argument('--hub_reuse_prob', type=float, default=0.0,
+                        help='Probability that a new correlation/both pair reuses an already-placed '
+                             'node as a hub instead of drawing two fresh nodes (0.0 = one edge per node, the default)')
     parser.add_argument('--output_suffix', type=str, default='',
                         help='Suffix to append to output filenames (e.g., "_sim1")')
 
@@ -77,7 +80,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # Run simulation
-    context1, context2, meta, (shift_nodes, corr_nodes, shift_corr_nodes) = modina.simulate_copula(
+    context1, context2, meta, (shift_nodes, corr_nodes, shift_corr_nodes), effects = modina.simulate_copula(
                            name1 =args.context_1,
                            name2 =args.context_2,
                            n_bi =args.n_bi,
@@ -101,12 +104,21 @@ if __name__ == '__main__':
                            n_both_bi_cat = args.n_both_bi_cat,
                            n_both_cont_cat = args.n_both_cont_cat,
                            shift = args.shift,
-                           corr =args.corr)
-    
+                           corr =args.corr,
+                           hub_reuse_prob = args.hub_reuse_prob)
+
+    # Per-node ground-truth stats (n_edges_tweaked, sum_jittered_magnitude) for save_gt's node file;
+    # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
+    gt_nodes = set(shift_nodes)
+    for pair in corr_nodes + shift_corr_nodes:
+        gt_nodes.update(pair)
+    node_stats = {node: (effects['node_degree'].get(node, 0), effects['node_sum_magnitude'].get(node, 0.0))
+                  for node in gt_nodes}
+
     # Write output files
     context1.to_csv(f'{args.context_1}_simulated_data_{args.output_suffix}.csv', index=False)
     context2.to_csv(f'{args.context_2}_simulated_data_{args.output_suffix}.csv', index=False)
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node')
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge')
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats)
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'])
     

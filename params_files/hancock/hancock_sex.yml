@@ -2,13 +2,12 @@ name_context_1: "Male"
 name_context_2: "Female"
 run_type: "file"
 data_type: "real"
-out_dir: "/home/larend/DyHealthNet/modina/data/hancock/sex/out/"
-work_dir: "/home/larend/DyHealthNet/modina/data/hancock/sex/work/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/sex/out/"
 
 real_world_data:
-  path_context_1: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_0.csv"
-  path_context_2: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_1.csv"
-  path_meta: "/home/larend/DyHealthNet/modina/data/hancock/sex/sex_metadata.csv"
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/sex/sex_0.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/sex/sex_1.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/sex/sex_metadata.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"

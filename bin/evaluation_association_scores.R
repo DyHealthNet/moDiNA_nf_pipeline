@@ -16,7 +16,7 @@ library(patchwork)
 # Create dictionary for ground truth edges
 create_gt_edge_dict <- function(path, mode){
   gt_table <- fread(path)
-  colnames(gt_table) <- c("node", "description")
+  setnames(gt_table, 1:2, c("node", "description"))  # rename by position: tolerates extra trailing columns
   gt_table$description <- str_trim(gt_table$description)
   
   gt_dict <- list()

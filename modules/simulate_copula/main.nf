@@ -42,6 +42,7 @@ process simulate_copula {
             --n_both_bi_cont "${params.simulation.n_both_bi_cont}" \
             --shift "${params.simulation.shift}" \
             --corr ${params.simulation.corr} \
+            --hub_reuse_prob ${params.simulation.hub_reuse_prob ?: 0.0} \
             --output_suffix "${meta.id}"
     """
     
