@@ -2,7 +2,7 @@ name_context_1: "Oropharynx"
 name_context_2: "Other"
 run_type: "file"
 data_type: "real"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site/out/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_new/"
 
 real_world_data:
   path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site/primary_tumor_site_4.csv"

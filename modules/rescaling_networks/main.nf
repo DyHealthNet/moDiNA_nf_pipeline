@@ -11,6 +11,7 @@ process rescaling_networks {
     output:
     tuple val(meta), path("${params.name_context_1}_rescaled_association_scores.csv"), emit: rescaled_network_context_1
     tuple val(meta), path("${params.name_context_2}_rescaled_association_scores.csv"), emit: rescaled_network_context_2
+    tuple val(meta), path("removed_nodes.csv"), emit: removed_nodes
     
     script:
     """

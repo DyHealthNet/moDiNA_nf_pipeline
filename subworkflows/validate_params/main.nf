@@ -82,7 +82,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None']
+    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None', 'diff-T-P']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -258,7 +258,7 @@ workflow validate_params {
 
     if (params.run_type == 'all'){
         def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E']
-        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P']
+        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'diff-T-P']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()

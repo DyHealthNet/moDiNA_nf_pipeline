@@ -9,8 +9,10 @@ process context_network_inference {
         tuple val(meta), path(file_context_data), path(file_meta_data)
 
     output:
-        tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores.csv")
-    
+        tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores.csv"), emit: association_scores
+        tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores_flagged_variables.csv"), emit: flagged_variables
+        tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores_scores_na.csv"), emit: scores_na
+
     script:
     """
         context_network_inference.py \\

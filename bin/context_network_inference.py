@@ -47,4 +47,17 @@ if __name__ == '__main__':
     )
     
     association_scores.to_csv(f'{args.output_prefix}.csv', index=False)
+
+    # Variables flagged (and excluded) in this context -- and the specific (label1, label2)
+    # pairs dropped because NApy returned a NaN raw-P/raw-E for them -- so both can be told apart
+    # from genuinely tested associations. Both are already excluded from association_scores
+    # entirely (not filled with sentinel values). Always written (even if empty), so downstream
+    # Nextflow output declarations don't need to special-case a missing file.
+    flagged_variables = association_scores.attrs.get('flagged_variables', [])
+    pd.DataFrame({'label': flagged_variables}).to_csv(f'{args.output_prefix}_flagged_variables.csv', index=False)
+
+    scores_na_records = association_scores.attrs.get('scores_na', [])
+    scores_na = pd.DataFrame(scores_na_records, columns=['label1', 'label2', 'test_type'])
+    scores_na.to_csv(f'{args.output_prefix}_scores_na.csv', index=False)
+
     print("Context network inference completed successfully")

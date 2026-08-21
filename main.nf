@@ -69,11 +69,11 @@ workflow {
     context_network_inference(input_context_1.mix(input_context_2))
 
     // Separate the outputs by context
-    network_context_1 = context_network_inference.out
+    network_context_1 = context_network_inference.out.association_scores
         .filter { meta, file -> meta.context == params.name_context_1 }
         .map { meta, file -> [meta.subMap('id'), file] }
-    
-    network_context_2 = context_network_inference.out
+
+    network_context_2 = context_network_inference.out.association_scores
         .filter { meta, file -> meta.context == params.name_context_2 }
         .map { meta, file -> [meta.subMap('id'), file] }
 

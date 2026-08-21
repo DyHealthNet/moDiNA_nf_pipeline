@@ -66,7 +66,6 @@ if __name__ == '__main__':
         else:
             max_path_length = args.max_path_length
 
-
         print("Starting differential edge inference...")
 
         # Perform differential network analysis. The per-node edge statistics are computed here,

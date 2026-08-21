@@ -2,7 +2,7 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/moderate_new/"
 
 simulation:
   n_simulations: 5
