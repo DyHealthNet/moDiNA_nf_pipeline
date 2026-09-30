@@ -2,12 +2,12 @@ name_context_1: "Oropharynx"
 name_context_2: "Other"
 run_type: "file"
 data_type: "real"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_new/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_ordinal/"
 
 real_world_data:
-  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site/primary_tumor_site_4.csv"
-  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site/primary_tumor_site_1-2-3.csv"
-  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site/primary_tumor_site_metadata.csv"
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_ordinal/primary_tumor_site_4.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_ordinal/primary_tumor_site_1-2-3.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/primary_tumor_site_ordinal/primary_tumor_site_metadata.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"

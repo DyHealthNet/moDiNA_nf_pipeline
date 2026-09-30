@@ -68,8 +68,31 @@ To specify the configurations, you can either change the parameters in the nextf
 | `simulation.n_both_bi_cont` | `integer` | `2` | Number of binary–continuous node pairs with both a mean shift and a correlation difference. |
 | `simulation.n_both_bi_cat` | `integer` | `2` | Number of binary–categorical node pairs with both a mean shift and a correlation difference. |
 | `simulation.n_both_cont_cat` | `integer` | `2` | Number of continuous–categorical node pairs with both a mean shift and a correlation difference. |
-| `simulation.shift` | `float` | `0.5` | Magnitude of the mean shift introduced in shifted nodes. Must be ≥ 0. |
-| `simulation.corr` | `float` | `0.7` | Target correlation difference introduced in correlated node pairs. Must be in [0, 1]. |
+| `simulation.corr_low` | `float` | `0.1` | Lower end of the range each correlation difference is drawn from. Must satisfy `0 ≤ corr_low ≤ corr_high ≤ 0.95`. |
+| `simulation.corr_high` | `float` | `0.7` | Upper end of that range. Set equal to `corr_low` for a single fixed magnitude. |
+| `simulation.shift_low` | `float` | `0.2` | Lower end of the range each mean shift is drawn from. Must satisfy `0 ≤ shift_low ≤ shift_high`. |
+| `simulation.shift_high` | `float` | `0.8` | Upper end of that range. Set equal to `shift_low` for a single fixed magnitude. |
+| `simulation.hub_reuse_prob` | `float` | `0.5` | Probability that a new correlation/both pair reuses an already-placed node as a hub instead of drawing two fresh nodes. `0.0` gives one edge per node. Must be in [0, 1]. |
+| `simulation.background_topology` | `string` | `null` | Wiring of the shared background correlation structure: `scale_free`, `erdos_renyi`, or `none`/`null` to disable it (every non-ground-truth pair exactly independent). |
+| `simulation.background_strength` | `float` | `0.2` | Target mean \|r\| over the directly wired pairs of the background. Must be strictly between 0 and 1. Ignored when the background is off. |
+| `simulation.background_density` | `integer` | `2` | Connections each node makes when it is added to the background network. Must be ≥ 1 and < the total number of variables. Ignored when the background is off. |
+| `simulation.background_seed` | `integer` | `null` | Base seed for the background's own random generator, offset by the replicate id so each replicate draws its own background reproducibly. Leave unset for a fresh, non-reproducible background per replicate. |
+| `simulation.binary_p_low` | `float` | `0.3` | Lower end of the range binary base rates are drawn from. Rates far from 0.5 cap the attainable φ-coefficient and attenuate any edge touching the node. |
+| `simulation.binary_p_high` | `float` | `0.7` | Upper end of that range. |
+| `simulation.ordinal_concentration` | `float` | `20.0` | Symmetric Dirichlet concentration for categorical category probabilities. Larger values keep categories closer to balanced; small values leave categories nearly empty and attenuate edges. |
+
+> **Migration note.** `simulation.shift` and `simulation.corr` were replaced by the four `*_low`/`*_high`
+> parameters above. Each ground truth effect now draws its own magnitude uniformly from the given
+> range, and the drawn value is recorded per node/edge in the ground truth files (`shift` and
+> `corr` columns), so a single run can be binned by realized effect size rather
+> than producing one operating point. To reproduce a previous run exactly, set
+> `corr_low: corr_high: <old corr>` and `shift_low: shift_high: <old shift>`. Params files still
+> carrying the old keys fail validation with an explicit message rather than silently ignoring them.
+>
+> Note that `background_strength` and `corr_high` compete for the same positive-definiteness budget:
+> a stronger background lowers the smallest eigenvalue of `Σ_base`, below which `corr_high` must stay,
+> and a hub reused across several edges spends the sum of their squared magnitudes against it. Raise
+> the two together only after checking that a simulation still runs.
 
 ### Real-World Data Parameters (`real_world_data.*`)
 

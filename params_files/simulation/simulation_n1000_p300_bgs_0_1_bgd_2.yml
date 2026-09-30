@@ -1,0 +1,69 @@
+name_context_1: "Context1"
+name_context_2: "Context2"
+run_type: "all"
+data_type: "simulation"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/simulation_n1000_p300_bgs_0_1_bgd_2/"
+
+simulation:
+  n_simulations: 5
+  n_bi: 100
+  n_cont: 100
+  n_cat: 100
+  n_samples_1: 1000
+  n_samples_2: 1000
+  n_shift_cont: 5
+  n_shift_bi: 5
+  n_shift_cat: 5
+  n_corr_cont_cont: 3
+  n_corr_bi_bi: 3
+  n_corr_cat_cat: 3
+  n_corr_bi_cont: 3
+  n_corr_bi_cat: 3
+  n_corr_cont_cat: 3
+  n_both_cont_cont: 3
+  n_both_bi_bi: 3
+  n_both_cat_cat: 3
+  n_both_bi_cont: 3
+  n_both_bi_cat: 3
+  n_both_cont_cat: 3
+
+  # Effect magnitudes. Each ground truth node/edge draws its own value uniformly from these ranges
+  # instead of every effect sharing one magnitude, so a single run spans weak to strong effects. The
+  # drawn value is written into ground_truth_simulated_{nodes,edges}_*.txt (columns `shift` and
+  # `corr`), so results can be binned by realized effect size afterwards -- one run
+  # yields a detection curve rather than a single operating point. Set low == high to reproduce the
+  # fixed-magnitude behaviour of moderate_simulation.yml (corr: 0.3, shift: 0.5).
+  corr_low: 0.1
+  corr_high: 0.4
+  shift_low: 0.2
+  shift_high: 0.8
+  hub_reuse_prob: 0.5
+
+  # Shared background correlation structure. A sparse scale-free network is turned into a dense
+  # correlation matrix, built once and copied to both contexts, so every non-ground-truth pair holds
+  # identical values in the two correlation matrices and its true between-context difference is
+  # exactly zero. This stops "is this pair correlated at all?" from nearly answering "is this pair
+  # differential?", which is what makes the benchmark too easy without a background.
+  background_topology: "scale_free"   # or "erdos_renyi" (no hubs, same edge count) / "none" (off)
+  background_strength: 0.1            # target mean |r| over the directly wired pairs
+  background_density: 2               # connections each node makes when added to the network
+  background_seed: 1000               # offset by the replicate id, so each replicate gets its own
+                                      # background while the set stays reproducible
+
+  # Raising background_strength lowers the smallest eigenvalue of the background and so shrinks the
+  # budget left for planting: corr_high must stay below it, and a hub reused across several edges
+  # spends the sum of their squared magnitudes against it. At 300 variables and density 2, strength
+  # 0.1 leaves lambda_min ~= 0.66 (budget 0.44), which comfortably carries corr_high 0.4 on a reused
+  # hub; strength 0.2 leaves only ~0.46 (budget 0.22) and would make the same run fail. Raise the
+  # strength and the correlation range together only after checking that modina still accepts it.
+
+  # Marginal shapes. Base rates far from 0.5, or near-empty categories, cap the attainable
+  # association and would attenuate any edge touching such a node regardless of its drawn magnitude.
+  binary_p_low: 0.3
+  binary_p_high: 0.7
+  ordinal_concentration: 20.0
+
+diff_net_analysis:
+  max_path_length: 2
+  test_type: "parametric"
+  multiple_testing: "bh"

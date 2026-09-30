@@ -65,18 +65,56 @@ if __name__ == '__main__':
     parser.add_argument('--n_both_bi_cont', type=int, required=True,
                         help='Number of binary-continuous node pairs with both an artificially introduced mean shift and correlation difference')
 
-    # Magnitude parameters
-    parser.add_argument('--shift', type=float, required=True,
-                        help='Magnitude of the mean shift')
-    parser.add_argument('--corr', type=float, required=True,
-                        help='Magnitude of the correlation difference (measured as correlation coefficient between 0 and 1)')
+    # Magnitude parameters. Each ground truth effect draws its own magnitude uniformly from the
+    # given range, so one run spans the whole weak-to-strong spectrum instead of a single operating
+    # point; the drawn value is written into the ground truth files for post-hoc ranking/binning.
+    # These replace the former single-valued --shift/--corr, which modina no longer accepts.
+    parser.add_argument('--corr_low', type=float, required=True,
+                        help='Lower end of the correlation-difference range (0 <= corr_low <= corr_high <= 0.95)')
+    parser.add_argument('--corr_high', type=float, required=True,
+                        help='Upper end of the correlation-difference range (0 <= corr_low <= corr_high <= 0.95)')
+    parser.add_argument('--shift_low', type=float, required=True,
+                        help='Lower end of the mean-shift range (0 <= shift_low <= shift_high)')
+    parser.add_argument('--shift_high', type=float, required=True,
+                        help='Upper end of the mean-shift range (0 <= shift_low <= shift_high)')
     parser.add_argument('--hub_reuse_prob', type=float, default=0.0,
                         help='Probability that a new correlation/both pair reuses an already-placed '
                              'node as a hub instead of drawing two fresh nodes (0.0 = one edge per node, the default)')
+
+    # Shared background correlation structure. Built once and copied to both contexts, so every
+    # non-ground-truth pair holds identical values in the two correlation matrices and its true
+    # between-context difference is exactly zero.
+    parser.add_argument('--background_topology', type=str, default='none',
+                        choices=['none', 'scale_free', 'erdos_renyi'],
+                        help="Wiring used to build the background ('none' disables it, reproducing "
+                             'the historical behaviour in which non-ground-truth pairs are exactly '
+                             'independent)')
+    parser.add_argument('--background_strength', type=float, default=0.2,
+                        help='Target mean |r| over the directly wired pairs of the background. '
+                             'Ignored when --background_topology is none')
+    parser.add_argument('--background_density', type=int, default=2,
+                        help='Connections each node makes when it is added to the background '
+                             'network. Ignored when --background_topology is none')
+    parser.add_argument('--background_seed', type=int, default=None,
+                        help='Seed for the background\'s own random generator, kept separate from '
+                             'the streams the rest of the simulation draws from. Omit for a fresh '
+                             'background per replicate')
+
+    # Marginal shape parameters
+    parser.add_argument('--binary_p_low', type=float, default=0.3,
+                        help='Lower end of the range binary base rates are drawn from. Rates far '
+                             'from 0.5 cap the attainable phi-coefficient and attenuate any edge '
+                             'touching the node')
+    parser.add_argument('--binary_p_high', type=float, default=0.7,
+                        help='Upper end of the range binary base rates are drawn from')
+    parser.add_argument('--ordinal_concentration', type=float, default=20.0,
+                        help='Symmetric Dirichlet concentration for categorical category '
+                             'probabilities. Larger values keep categories closer to balanced')
+
     parser.add_argument('--output_suffix', type=str, default='',
                         help='Suffix to append to output filenames (e.g., "_sim1")')
 
-    
+
     args = parser.parse_args()
     
     # Run simulation
@@ -103,11 +141,23 @@ if __name__ == '__main__':
                            n_both_bi_cont = args.n_both_bi_cont,
                            n_both_bi_cat = args.n_both_bi_cat,
                            n_both_cont_cat = args.n_both_cont_cat,
-                           shift = args.shift,
-                           corr =args.corr,
-                           hub_reuse_prob = args.hub_reuse_prob)
+                           corr_low = args.corr_low,
+                           corr_high = args.corr_high,
+                           shift_low = args.shift_low,
+                           shift_high = args.shift_high,
+                           hub_reuse_prob = args.hub_reuse_prob,
+                           # argparse has no native "None" literal, so the disabled case travels as
+                           # the string 'none' and is mapped back here.
+                           background_topology = (None if args.background_topology == 'none'
+                                                  else args.background_topology),
+                           background_strength = args.background_strength,
+                           background_density = args.background_density,
+                           background_seed = args.background_seed,
+                           binary_p_low = args.binary_p_low,
+                           binary_p_high = args.binary_p_high,
+                           ordinal_concentration = args.ordinal_concentration)
 
-    # Per-node ground-truth stats (n_edges_tweaked, sum_jittered_magnitude) for save_gt's node file;
+    # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
     gt_nodes = set(shift_nodes)
     for pair in corr_nodes + shift_corr_nodes:
@@ -119,6 +169,8 @@ if __name__ == '__main__':
     context1.to_csv(f'{args.context_1}_simulated_data_{args.output_suffix}.csv', index=False)
     context2.to_csv(f'{args.context_2}_simulated_data_{args.output_suffix}.csv', index=False)
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats)
+    # `node_shift_magnitude` adds the per-node drawn shift as a further named column. Ranged draws
+    # make this necessary: without it the realized shift of a node is unrecoverable from the output.
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'])
     modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'])
     

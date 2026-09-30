@@ -82,7 +82,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None', 'diff-T-P']
+    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -181,14 +181,66 @@ workflow validate_params {
             }
         }   
         
-        if (params.simulation.shift == null || !(params.simulation.shift instanceof Number) || params.simulation.shift < 0) {
-            error "ERROR: Parameter 'simulation.shift' must be a non-negative number (>= 0)"
+        // Params files written before ranged magnitudes are silently wrong rather than broken:
+        // Groovy would simply ignore the stale keys and the new ones would come back null, so the
+        // failure would surface as an obscure "must be a number" further down. Name the migration
+        // explicitly instead.
+        if (params.simulation.containsKey('shift') || params.simulation.containsKey('corr')) {
+            error """ERROR: Parameters 'simulation.shift' and 'simulation.corr' were replaced by ranges.
+  Each ground truth effect now draws its own magnitude uniformly from the given interval, which is
+  recorded per node/edge in the ground truth files so effects can be ranked by realized size.
+  Replace   shift: X           with   shift_low: X
+                                      shift_high: X
+  Replace   corr: Y            with   corr_low: Y
+                                      corr_high: Y
+  to reproduce the previous fixed-magnitude behaviour, or widen the intervals to sweep a range."""
         }
 
-        if (params.simulation.corr == null || !(params.simulation.corr instanceof Number) || params.simulation.corr < 0 || params.simulation.corr > 1) {
-            error "ERROR: Parameter 'simulation.corr' must be a number between 0 and 1 (inclusive)"
+        range_params = [['corr_low', 'corr_high', 0.95], ['shift_low', 'shift_high', null]]
+        range_params.each { low_name, high_name, upper ->
+            [low_name, high_name].each { param_name ->
+                if (params.simulation[param_name] == null || !(params.simulation[param_name] instanceof Number) || params.simulation[param_name] < 0) {
+                    error "ERROR: Parameter 'simulation.${param_name}' must be a non-negative number (>= 0)"
+                }
+            }
+            if (params.simulation[low_name] > params.simulation[high_name]) {
+                error "ERROR: Parameter 'simulation.${low_name}' must not exceed 'simulation.${high_name}'"
+            }
+            // The correlation ceiling is modina's: a magnitude at or above it leaves no room for the
+            // positive-definiteness budget the planting step spends.
+            if (upper != null && params.simulation[high_name] > upper) {
+                error "ERROR: Parameter 'simulation.${high_name}' must be at most ${upper}"
+            }
         }
-        
+
+        if (params.simulation.hub_reuse_prob != null && (!(params.simulation.hub_reuse_prob instanceof Number) || params.simulation.hub_reuse_prob < 0 || params.simulation.hub_reuse_prob > 1)) {
+            error "ERROR: Parameter 'simulation.hub_reuse_prob' must be a number between 0 and 1 (inclusive)"
+        }
+
+        // Background structure. All optional; omitting background_topology reproduces the historical
+        // behaviour in which every non-ground-truth pair is exactly independent.
+        def valid_topologies = ['none', 'scale_free', 'erdos_renyi']
+        def topology = params.simulation.background_topology
+        if (topology != null && !valid_topologies.contains(topology)) {
+            error "ERROR: Parameter 'simulation.background_topology' must be one of: ${valid_topologies.join(', ')}"
+        }
+        if (topology != null && topology != 'none') {
+            if (params.simulation.background_strength != null && (!(params.simulation.background_strength instanceof Number) || params.simulation.background_strength <= 0 || params.simulation.background_strength >= 1)) {
+                error "ERROR: Parameter 'simulation.background_strength' must be a number strictly between 0 and 1"
+            }
+            def n_vars = params.simulation.n_bi + params.simulation.n_cont + params.simulation.n_cat
+            if (params.simulation.background_density != null && (!(params.simulation.background_density instanceof Number) || params.simulation.background_density < 1 || params.simulation.background_density >= n_vars)) {
+                error "ERROR: Parameter 'simulation.background_density' must be an integer >= 1 and < the total number of variables (${n_vars})"
+            }
+            // corr_high must stay strictly below the background's smallest eigenvalue, which modina
+            // only knows once the background is built. Catching the guaranteed-impossible case here
+            // (a magnitude a correlation matrix cannot carry at all) keeps the cheap error cheap;
+            // modina raises the exact, background-aware version.
+            if (params.simulation.corr_high >= 1) {
+                error "ERROR: Parameter 'simulation.corr_high' must be below 1 when a background is enabled"
+            }
+        }
+
         log.info "✓ All simulation parameters are valid"
     }
     
@@ -258,7 +310,7 @@ workflow validate_params {
 
     if (params.run_type == 'all'){
         def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E']
-        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'diff-T-P']
+        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P']
         def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
