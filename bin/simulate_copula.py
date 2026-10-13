@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-import modina
 import argparse
+import random
+
+import numpy as np
+import modina
 
 
 if __name__ == '__main__':
@@ -78,44 +81,36 @@ if __name__ == '__main__':
     parser.add_argument('--shift_high', type=float, required=True,
                         help='Upper end of the mean-shift range (0 <= shift_low <= shift_high)')
     parser.add_argument('--hub_reuse_prob', type=float, default=0.0,
-                        help='Probability that a new correlation/both pair reuses an already-placed '
-                             'node as a hub instead of drawing two fresh nodes (0.0 = one edge per node, the default)')
+                        help='Fraction of each pair type\'s correlation/both pairs that reuse an '
+                             'already-placed node as a hub instead of drawing two fresh nodes, spread '
+                             'evenly across node types (0.0 = one edge per node, the default)')
 
-    # Shared background correlation structure. Built once and copied to both contexts, so every
+    # Shared scale-free background correlation structure. Built once and copied to both contexts, so every
     # non-ground-truth pair holds identical values in the two correlation matrices and its true
     # between-context difference is exactly zero.
-    parser.add_argument('--background_topology', type=str, default='none',
-                        choices=['none', 'scale_free', 'erdos_renyi'],
-                        help="Wiring used to build the background ('none' disables it, reproducing "
-                             'the historical behaviour in which non-ground-truth pairs are exactly '
-                             'independent)')
     parser.add_argument('--background_strength', type=float, default=0.2,
-                        help='Target mean |r| over the directly wired pairs of the background. '
-                             'Ignored when --background_topology is none')
+                        help='Target mean |r| over the directly wired pairs of the background')
     parser.add_argument('--background_density', type=int, default=2,
                         help='Connections each node makes when it is added to the background '
-                             'network. Ignored when --background_topology is none')
+                             'network')
     parser.add_argument('--background_seed', type=int, default=None,
                         help='Seed for the background\'s own random generator, kept separate from '
                              'the streams the rest of the simulation draws from. Omit for a fresh '
                              'background per replicate')
 
-    # Marginal shape parameters
-    parser.add_argument('--binary_p_low', type=float, default=0.3,
-                        help='Lower end of the range binary base rates are drawn from. Rates far '
-                             'from 0.5 cap the attainable phi-coefficient and attenuate any edge '
-                             'touching the node')
-    parser.add_argument('--binary_p_high', type=float, default=0.7,
-                        help='Upper end of the range binary base rates are drawn from')
-    parser.add_argument('--ordinal_concentration', type=float, default=20.0,
-                        help='Symmetric Dirichlet concentration for categorical category '
-                             'probabilities. Larger values keep categories closer to balanced')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Seed for the planting and sampling streams (`random` and `np.random`). '
+                             'Omit for a fresh, non-reproducible draw')
 
     parser.add_argument('--output_suffix', type=str, default='',
                         help='Suffix to append to output filenames (e.g., "_sim1")')
 
 
     args = parser.parse_args()
+
+    if args.seed is not None:
+        random.seed(args.seed)
+        np.random.seed(args.seed)
     
     # Run simulation
     context1, context2, meta, (shift_nodes, corr_nodes, shift_corr_nodes), effects = modina.simulate_copula(
@@ -146,16 +141,9 @@ if __name__ == '__main__':
                            shift_low = args.shift_low,
                            shift_high = args.shift_high,
                            hub_reuse_prob = args.hub_reuse_prob,
-                           # argparse has no native "None" literal, so the disabled case travels as
-                           # the string 'none' and is mapped back here.
-                           background_topology = (None if args.background_topology == 'none'
-                                                  else args.background_topology),
                            background_strength = args.background_strength,
                            background_density = args.background_density,
-                           background_seed = args.background_seed,
-                           binary_p_low = args.binary_p_low,
-                           binary_p_high = args.binary_p_high,
-                           ordinal_concentration = args.ordinal_concentration)
+                           background_seed = args.background_seed)
 
     # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.

@@ -3,12 +3,13 @@ process differential_edge_inference {
 
     publishDir "${params.out_dir}/differential_edge_inference", mode: 'symlink'
 
-    tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.edge_metric}"
+    // One job per metric family (diff, sum, none) computes all of its requested edge metrics
+    tag "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.edge_family}"
 
     input:
         tuple val(meta), path(network_context_1), path(network_context_2)
 
-    output: // here single tuple because we want to keep all files together as they are used together in ranking
+    output: // one file pair per metric in meta.edge_metrics; main.nf splits them back into per-metric tuples
         tuple val(meta), path("*_edge_metrics.csv"), path("*_edge_node_stats.csv"), emit: edge_metrics
 
     script:
@@ -16,8 +17,8 @@ process differential_edge_inference {
         differential_edge_inference.py \
             --network_context_1 "${network_context_1}" \
             --network_context_2 "${network_context_2}" \
-            --edge_metric "${meta.edge_metric}" \
-            ${params.diff_net_analysis.max_path_length ? "--max_path_length ${params.diff_net_analysis.max_path_length}" : ""} \
+            --edge_metrics "${meta.edge_metrics.join(',')}" \
+            ${params.diff_net_analysis.lp_cap ? "--lp_cap ${params.diff_net_analysis.lp_cap}" : ""} \
             --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}"
     """
     

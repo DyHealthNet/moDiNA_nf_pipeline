@@ -18,6 +18,23 @@ include {evaluation_roc_recall_enrichment} from './modules/evaluation_roc_recall
 include {evaluation_ranking_similarity} from './modules/evaluation_ranking_similarity/main.nf'
 include {evaluation_mean_shifts} from './modules/evaluation_mean_shifts/main.nf'
 
+// Output file prefix of a simulation ('' for real-world data), as used by the inference and ranking scripts
+def outputPrefix(id) { params.data_type == 'simulation' ? "sim${id}".toString() : '' }
+
+// The inference scripts name the files of the empty placeholder metric '' after Python's None
+def metricFileName(id, metric, suffix) { "${outputPrefix(id)}_${metric ?: 'None'}_${suffix}".toString() }
+
+// Batched processes emit one file per metric/configuration; pick the one with the expected name
+def fileByName(files, name) {
+    // A glob matching a single file yields a bare Path instead of a list
+    def candidates = files instanceof Collection ? files : [files]
+    def file = candidates.find { it.name == name }
+    if (file == null) {
+        error "ERROR: Expected output file '${name}' not found among ${candidates*.name}"
+    }
+    return file
+}
+
 workflow {
 
     // ----------- Parameter validation -----------
@@ -115,26 +132,43 @@ workflow {
         .join(file_meta, by: 0)
         // Result: [meta, net1, net2, ctx1, ctx2, meta_file]
     
-    // Combine with unique node_metrics to create all configurations for node inference
-    diff_node_input = validate_params.out.node_metrics
+    // One node inference job per simulation and metric family (STC, WDC, PRC, none)
+    diff_node_input = validate_params.out.node_metric_groups
         .combine(joined_files)
-        .map { node_m, meta, net1, net2, ctx1, ctx2, meta_file ->
-            [meta + [node_metric: node_m], net1, net2, ctx1, ctx2, meta_file]
+        .map { family, node_ms, meta, net1, net2, ctx1, ctx2, meta_file ->
+            [meta + [node_family: family, node_metrics: node_ms], net1, net2, ctx1, ctx2, meta_file]
         }
     
     differential_node_inference(diff_node_input)
 
-    // Combine with unique edge_metrics to create all configurations for edge inference
-    diff_edge_input = validate_params.out.edge_metrics
+    // Split back into one [meta(id, node_metric), file, meta_file] tuple per node metric
+    diff_node_metrics = differential_node_inference.out.node_metrics
+        .flatMap { meta, node_files, meta_file ->
+            meta.node_metrics.collect { node_m ->
+                [meta.subMap('id') + [node_metric: node_m], fileByName(node_files, metricFileName(meta.id, node_m, 'node_metrics.csv')), meta_file]
+            }
+        }
+
+    // One edge inference job per simulation and metric family (diff, sum, none)
+    diff_edge_input = validate_params.out.edge_metric_groups
         .combine(joined_files)
-        .map { edge_m, meta, net1, net2, ctx1, ctx2, file_meta ->
-            [meta + [edge_metric: edge_m], net1, net2]
+        .map { family, edge_ms, meta, net1, net2, ctx1, ctx2, file_meta ->
+            [meta + [edge_family: family, edge_metrics: edge_ms], net1, net2]
         }
     
     differential_edge_inference(diff_edge_input)
 
-    // ----------- Filtering of the differential network (optional) -----------
+    // Split back into one [meta(id, edge_metric), edge file, stats file] tuple per edge metric
     diff_edge_metrics = differential_edge_inference.out.edge_metrics
+        .flatMap { meta, edge_files, stats_files ->
+            meta.edge_metrics.collect { edge_m ->
+                [meta.subMap('id') + [edge_metric: edge_m],
+                 fileByName(edge_files, metricFileName(meta.id, edge_m, 'edge_metrics.csv')),
+                 fileByName(stats_files, metricFileName(meta.id, edge_m, 'edge_node_stats.csv'))]
+            }
+        }
+
+    // ----------- Filtering of the differential network (optional) -----------
     if (params.diff_net_analysis.filter_target == 'differential') {
         filter_differential_network(diff_edge_metrics)
         diff_edge_metrics = filter_differential_network.out.edge_metrics
@@ -143,7 +177,7 @@ workflow {
     // ----------- Ranking nodes / edges -----------
     // Combine all algorithm configs with differential network results
     ranking_input = validate_params.out.config_combs
-        .combine(differential_node_inference.out.node_metrics)
+        .combine(diff_node_metrics)
         .combine(diff_edge_metrics)
         .filter { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file, stats_file ->
             node_m == meta_node.node_metric && edge_m == meta_edge.edge_metric && meta_node.id == meta_edge.id
@@ -151,11 +185,41 @@ workflow {
         .map { node_m, edge_m, algo, meta_node, node_file, file_meta, meta_edge, edge_file, stats_file ->
             [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, stats_file, file_meta]
         }
-    
-    node_ranking(ranking_input)
+
+    // One ranking job per simulation and algorithm. groupKey carries the group size so each group is
+    // released as soon as it is complete; sorting keeps the job's inputs (and so its -resume hash) stable.
+    ranking_batches = ranking_input
+        .combine(validate_params.out.configs_per_algorithm)
+        .map { meta, node_file, edge_file, stats_file, meta_file, configs_per_algorithm ->
+            def config = [node_metric: meta.node_metric, edge_metric: meta.edge_metric,
+                          node_file: node_file.name, edge_file: edge_file.name, stats_file: stats_file.name,
+                          node_path: node_file.toString(), edge_path: edge_file.toString(),
+                          output_prefix: "${outputPrefix(meta.id) ? outputPrefix(meta.id) + '_' : ''}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}".toString()]
+            [groupKey(meta.subMap(['id', 'algorithm']), configs_per_algorithm[meta.algorithm]), config, node_file, edge_file, stats_file, meta_file]
+        }
+        .groupTuple()
+        .map { key, configs, node_files, edge_files, stats_files, meta_files ->
+            [key.getGroupTarget(),
+             configs.sort { it.output_prefix },
+             node_files.unique().sort { it.name },
+             edge_files.unique().sort { it.name },
+             stats_files.unique().sort { it.name },
+             meta_files[0]]
+        }
+
+    node_ranking(ranking_batches)
+
+    // Split back into one [meta(id, node_metric, edge_metric, algorithm), node file, edge file, ranking file] tuple per configuration
+    rankings = node_ranking.out
+        .flatMap { meta, configs, ranking_files ->
+            configs.collect { config ->
+                [meta.subMap('id') + [node_metric: config.node_metric, edge_metric: config.edge_metric, algorithm: meta.algorithm],
+                 config.node_path, config.edge_path, fileByName(ranking_files, "${config.output_prefix}_ranking.csv".toString())]
+            }
+        }
 
     // ----------- Create summary file -----------
-    summary_data = node_ranking.out
+    summary_data = rankings
         .map { meta, node_metrics_file, edge_metrics_file, ranking_file  ->
             [meta, ranking_file, node_metrics_file, edge_metrics_file]
         }

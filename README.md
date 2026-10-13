@@ -72,14 +72,11 @@ To specify the configurations, you can either change the parameters in the nextf
 | `simulation.corr_high` | `float` | `0.7` | Upper end of that range. Set equal to `corr_low` for a single fixed magnitude. |
 | `simulation.shift_low` | `float` | `0.2` | Lower end of the range each mean shift is drawn from. Must satisfy `0 ≤ shift_low ≤ shift_high`. |
 | `simulation.shift_high` | `float` | `0.8` | Upper end of that range. Set equal to `shift_low` for a single fixed magnitude. |
-| `simulation.hub_reuse_prob` | `float` | `0.5` | Probability that a new correlation/both pair reuses an already-placed node as a hub instead of drawing two fresh nodes. `0.0` gives one edge per node. Must be in [0, 1]. |
-| `simulation.background_topology` | `string` | `null` | Wiring of the shared background correlation structure: `scale_free`, `erdos_renyi`, or `none`/`null` to disable it (every non-ground-truth pair exactly independent). |
-| `simulation.background_strength` | `float` | `0.2` | Target mean \|r\| over the directly wired pairs of the background. Must be strictly between 0 and 1. Ignored when the background is off. |
-| `simulation.background_density` | `integer` | `2` | Connections each node makes when it is added to the background network. Must be ≥ 1 and < the total number of variables. Ignored when the background is off. |
+| `simulation.hub_reuse_prob` | `float` | `0.5` | Fraction of each pair type's correlation/both pairs that reuse an already-placed node as a hub instead of drawing two fresh nodes. The count is fixed per pair type (not drawn per edge) and spread evenly across node types, so the number of ground truth nodes per type is consistent. `0.0` gives one edge per node. Must be in [0, 1]. |
+| `simulation.background_strength` | `float` | `0.2` | Target mean \|r\| over the directly wired pairs of the background. The background is always a scale-free network shared by both contexts. Must be strictly between 0 and 1. |
+| `simulation.background_density` | `integer` | `2` | Connections each node makes when it is added to the background network. Must be ≥ 1 and < the total number of variables. |
 | `simulation.background_seed` | `integer` | `null` | Base seed for the background's own random generator, offset by the replicate id so each replicate draws its own background reproducibly. Leave unset for a fresh, non-reproducible background per replicate. |
-| `simulation.binary_p_low` | `float` | `0.3` | Lower end of the range binary base rates are drawn from. Rates far from 0.5 cap the attainable φ-coefficient and attenuate any edge touching the node. |
-| `simulation.binary_p_high` | `float` | `0.7` | Upper end of that range. |
-| `simulation.ordinal_concentration` | `float` | `20.0` | Symmetric Dirichlet concentration for categorical category probabilities. Larger values keep categories closer to balanced; small values leave categories nearly empty and attenuate edges. |
+| `simulation.seed` | `integer` | `null` | Base seed for planting the ground truth and sampling the data, offset by the replicate id so replicate *k* draws the same way across configs. Leave unset for a non-reproducible draw. |
 
 > **Migration note.** `simulation.shift` and `simulation.corr` were replaced by the four `*_low`/`*_high`
 > parameters above. Each ground truth effect now draws its own magnitude uniformly from the given
@@ -109,17 +106,18 @@ Only required when `data_type = 'real'`.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `diff_net_analysis.path_config` | `path` | `'input_samplesheet.csv'` | Path to the CSV samplesheet listing moDiNA configurations to run. Required when `run_type = 'file'`. Columns: `node_metric`, `edge_metric`, `ranking_algorithm`. |
-| `diff_net_analysis.node_metric` | `string` | `'STC'` | Node-level differential metric. Used when `run_type = 'single'`. One of: `STC`, `DC-P`, `DC-E`, `WDC-P`, `WDC-L-P`, `WDC-E`, `PRC-P`, `PRC-L-P`, `PRC-E`, `None`. |
-| `diff_net_analysis.edge_metric` | `string` | `'diff-E'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `diff-P`, `diff-E`, `diff-L-P` (difference of -log10(p-values) between contexts), `diff-L-PE` (difference of -log10(p) × rescaled effect size), `sum-diff-PE`, `sum-diff-L-PE`, `None`. |
-| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `absDimontRank`, `DimontRank`, `nodeRank`. |
+| `diff_net_analysis.node_metric` | `string` | `'STC-P'` | Node-level differential metric. Used when `run_type = 'single'`. One of: `WDC-<score>`, `PRC-<score>` or `STC-<score>` with score `P`, `LP`, `RE`, `VE`, `LPxRE`, `LPxVE` (e.g. `STC-P`), the capped variants `<family>-LPxRE-cap` / `<family>-LPxVE-cap` (require `lp_cap`), or `None`. |
+| `diff_net_analysis.edge_metric` | `string` | `'diff-LPxRE'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `diff-P`, `diff-LP`, `diff-RE`, `diff-VE`, `diff-LPxRE`, `diff-LPxVE`, `sum-LP-VE`, `sum-LP-RE`, the capped variants `diff-LPxRE-cap` / `diff-LPxVE-cap` (require `lp_cap`), or `None`. See the score definitions in the Python package documentation. |
+| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `MeanEdgeRank`, `MedianEdgeRank`, `nodeRank`, `MeanProductRank`, `MedianProductRank`. Configurations combining a node and an edge metric (`PageRank+`, `MeanProductRank`, `MedianProductRank`) are skipped with a warning if one metric uses the RE and the other the VE effect-size rescaling. |
 | `diff_net_analysis.filter_target` | `string` | `''` | Which network to filter. Leave empty to skip filtering. `context-specific` filters the two context networks before differential analysis (using `filter_metric` and `filter_rule`); `differential` filters the differential network on the computed `edge_metric` (`filter_metric` and `filter_rule` are ignored). When set, `filter_method` is required. |
 | `diff_net_analysis.filter_method` | `string` | `''` | Method to filter edges. One of: `degree`, `density`, `quantile`. Required when `filter_target` is set. |
 | `diff_net_analysis.filter_param` | `integer / float` | `2` | Parameter for the chosen filter method. Integer for `degree`; float in (0, 1) for `density` and `quantile`. |
 | `diff_net_analysis.filter_metric` | `string` | `'raw-P'` | Edge score used as the basis for filtering. One of: `raw-P`, `rescaled-E`. Required when `filter_method` is set and `filter_target` is `context-specific`. |
 | `diff_net_analysis.filter_rule` | `string` | `'zero'` | Rule applied when filtering edges. One of: `zero` (set filtered edges to zero), `union` (keep edges present in at least one context). Required when `filter_method` is set and `filter_target` is `context-specific`. |
-| `diff_net_analysis.max_path_length` | `integer` | `2` | Maximum path length used for the `int-IS` edge metric. Must be an integer in [0, 4]. Only relevant when `int-IS` is selected as an edge metric. |
+| `diff_net_analysis.lp_cap` | `float` | `null` | Cap for -log10(p) in the LP × effect-size product metrics. When set, every configuration with a product metric (`*-LPxRE`, `*-LPxVE`) is run twice: uncapped and with the capped variant (`*-LPxRE-cap`, `*-LPxVE-cap`), in which -log10(p) is limited to `lp_cap` so that above the cap only the effect size carries the signal. Other metrics are unaffected. Leave empty for no cap. |
 | `diff_net_analysis.test_type` | `string` | `'nonparametric'` | Type of statistical test used during context network inference. One of: `parametric`, `nonparametric`. |
 | `diff_net_analysis.nan_value` | `integer` | `-89` | Sentinel value in input data that represents missing / NA values. |
+| `diff_net_analysis.n_min_valid` | `integer` | `10` | Minimum number of samples (after pairwise removal of missing values) a pairwise association test must be based on. Edges below this in either context are removed from both. |
 | `diff_net_analysis.multiple_testing` | `string` | `'bh'` | Multiple testing correction method applied to association p-values. One of: `bh` (Benjamini–Hochberg), `by` (Benjamini–Yekutieli). |
 
 

@@ -2,7 +2,7 @@ name_context_1: "Context1"
 name_context_2: "Context2"
 run_type: "all"
 data_type: "simulation"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/simulation_n3000_p300_bgs_0_1_bgd_2/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/simulation_n3000_p300_bgs_0_1_bgd_2_new_cleaned/"
 
 simulation:
   n_simulations: 5
@@ -44,7 +44,6 @@ simulation:
   # identical values in the two correlation matrices and its true between-context difference is
   # exactly zero. This stops "is this pair correlated at all?" from nearly answering "is this pair
   # differential?", which is what makes the benchmark too easy without a background.
-  background_topology: "scale_free"   # or "erdos_renyi" (no hubs, same edge count) / "none" (off)
   background_strength: 0.1            # target mean |r| over the directly wired pairs
   background_density: 2               # connections each node makes when added to the network
   background_seed: 1000               # offset by the replicate id, so each replicate gets its own
@@ -57,13 +56,7 @@ simulation:
   # hub; strength 0.2 leaves only ~0.46 (budget 0.22) and would make the same run fail. Raise the
   # strength and the correlation range together only after checking that modina still accepts it.
 
-  # Marginal shapes. Base rates far from 0.5, or near-empty categories, cap the attainable
-  # association and would attenuate any edge touching such a node regardless of its drawn magnitude.
-  binary_p_low: 0.3
-  binary_p_high: 0.7
-  ordinal_concentration: 20.0
-
 diff_net_analysis:
-  max_path_length: 2
   test_type: "parametric"
   multiple_testing: "bh"
+  lp_cap: 10

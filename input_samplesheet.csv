@@ -1,5 +1,5 @@
 node_metric,edge_metric,ranking_algorithm
-STC,diff-L-PE,PageRank+
-STC,diff-L-P,PageRank+
-STC,diff-E,PageRank+
-STC,diff-T-E,PageRank+
+STC-P,diff-LPxRE,PageRank+
+STC-P,diff-LP,PageRank+
+STC-P,diff-RE,PageRank+
+STC-P,diff-VE,PageRank+

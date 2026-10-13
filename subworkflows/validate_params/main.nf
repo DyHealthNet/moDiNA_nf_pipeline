@@ -71,8 +71,44 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
     }
 }
 
+// Metric and algorithm names (keep in sync with moDiNA/src/modina/metrics.py).
+// Every metric is built from one per-context score; the LP x effect-size products additionally have
+// a capped variant ('<metric>-cap', -log10(p) capped at diff_net_analysis.lp_cap).
+def scoreTypes() { ['P', 'LP', 'RE', 'VE', 'LPxRE', 'LPxVE'] }
+def cappedScoreTypes() { ['LPxRE-cap', 'LPxVE-cap'] }
+def nodeMetrics(capped = true) {
+    def scores = capped ? scoreTypes() + cappedScoreTypes() : scoreTypes()
+    ['WDC', 'PRC', 'STC'].collectMany { family -> scores.collect { score -> "${family}-${score}".toString() } }
+}
+def edgeMetrics(capped = true) {
+    def scores = capped ? scoreTypes() + cappedScoreTypes() : scoreTypes()
+    scores.collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE']
+}
+def rankingAlgorithms() { ['PageRank+', 'PageRank', 'MeanEdgeRank', 'MedianEdgeRank', 'nodeRank', 'MeanProductRank', 'MedianProductRank'] }
+
+// Family of a node/edge metric (STC, WDC, PRC, diff, sum); the empty placeholder metric '' is 'none'.
+// Differential inference runs one job per family and simulation.
+def metricFamily(metric) { metric ? metric.split('-', 2)[0] : 'none' }
+
+// [[family, [metrics...]], ...] in the order the metrics first appear
+def groupByFamily(metrics) {
+    metrics.groupBy { metric -> metricFamily(metric) }.collect { family, members -> [family, members] }
+}
+
+def isProductMetric(metric) { metric && (metric.endsWith('-LPxRE') || metric.endsWith('-LPxVE')) }
+def isCappedMetric(metric) { metric && metric.endsWith('-cap') }
+
+// Effect-size rescaling a metric uses: 'RE' (rank-based), 'VE' (variance-explained) or null (P, LP)
+def effectRescaling(metric) {
+    if (!metric || metric == 'None') return null
+    def score = metric.startsWith('sum-') ? metric.substring(4) : metric.split('-', 2)[1]
+    if (score.contains('RE')) return 'RE'
+    if (score.contains('VE')) return 'VE'
+    return null
+}
+
 def validateNodeMetric(node_metric) {
-    def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E', 'None']
+    def valid_node_metrics = nodeMetrics() + ['None']
     if (!node_metric) {
         error "ERROR: Parameter 'node_metric' must be provided. If you do not wish to use a node metric, please provide an empty string ''"
     }
@@ -82,7 +118,7 @@ def validateNodeMetric(node_metric) {
 }
 
 def validateEdgeMetric(edge_metric) {
-    def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P', 'None']
+    def valid_edge_metrics = edgeMetrics() + ['None']
     if (!edge_metric) {
         error "ERROR: Parameter 'edge_metric' must be provided. If you do not wish to use an edge metric, please provide an empty string ''"
     }
@@ -92,7 +128,7 @@ def validateEdgeMetric(edge_metric) {
 }
 
 def validateRankingAlgorithm(ranking_algorithm) {
-    def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
+    def valid_algorithms = rankingAlgorithms()
     if (!ranking_algorithm || ranking_algorithm == '') {
         error "ERROR: Parameter 'ranking_algorithm' must be provided"
     }
@@ -101,14 +137,48 @@ def validateRankingAlgorithm(ranking_algorithm) {
     }
 }
 
+// lp_cap: empty/null (no cap) or a positive number
+def validateLpCap(lp_cap) {
+    if (lp_cap == null || lp_cap == '') {
+        return
+    }
+    if (!(lp_cap instanceof Number) || lp_cap <= 0) {
+        error "ERROR: Parameter 'diff_net_analysis.lp_cap' must be a positive number (or empty for no cap)"
+    }
+}
+
+// When lp_cap is set, every configuration using an LP x effect-size product metric is run twice:
+// once as given (uncapped) and once with each product metric replaced by its capped variant.
+// Without lp_cap, capped metrics are not available.
+def expandCapConfigurations(configs, lp_cap) {
+    def has_cap = !(lp_cap == null || lp_cap == '')
+    def expanded = []
+    for (config in configs) {
+        def node_metric = config[0]
+        def edge_metric = config[1]
+        if (!has_cap && (isCappedMetric(node_metric) || isCappedMetric(edge_metric))) {
+            error "ERROR: Configuration [${config.join(', ')}] uses a capped metric ('-cap'), which requires 'diff_net_analysis.lp_cap' to be set"
+        }
+        expanded.add(config)
+        if (has_cap && (isProductMetric(node_metric) || isProductMetric(edge_metric))) {
+            expanded.add([
+                isProductMetric(node_metric) ? "${node_metric}-cap".toString() : node_metric,
+                isProductMetric(edge_metric) ? "${edge_metric}-cap".toString() : edge_metric,
+                config[2]
+            ])
+        }
+    }
+    return expanded.unique()
+}
+
 def removeInvalidConfigurations(configs, warn = true){
     def validConfigs = []
     for (config in configs) {
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether DimontRank, absDimontRank, PageRank is used with any node_metric -> just give warning
-        if (['DimontRank', 'absDimontRank', 'PageRank'].contains(ranking_algo)) {
+        // Check whether MeanEdgeRank, MedianEdgeRank, PageRank is used with any node_metric -> just give warning
+        if (['MeanEdgeRank', 'MedianEdgeRank', 'PageRank'].contains(ranking_algo)) {
             if (node_metric != '') {
                 if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
                 config[0] = ''
@@ -123,10 +193,17 @@ def removeInvalidConfigurations(configs, warn = true){
             }
         }
 
-        // Check whether for configs with algorithm PageRank+ the node and edge metrics are given
-        if (ranking_algo == 'PageRank+') {
+        // Check whether for configs with algorithm PageRank+, MeanProductRank or MedianProductRank the node and edge
+        // metrics are given and use the same effect-size rescaling (RE or VE; P- and LP-based metrics combine with either)
+        if (['PageRank+', 'MeanProductRank', 'MedianProductRank'].contains(ranking_algo)) {
             if (node_metric == '' || edge_metric == '') {
-                if (warn) log.warn "WARNING: Configuration with ranking_algorithm 'PageRank+' requires both node_metric and edge_metric to be provided. This configuration will be skipped."
+                if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' requires both node_metric and edge_metric to be provided. This configuration will be skipped."
+                continue
+            }
+            def node_rescaling = effectRescaling(node_metric)
+            def edge_rescaling = effectRescaling(edge_metric)
+            if (node_rescaling && edge_rescaling && node_rescaling != edge_rescaling) {
+                if (warn) log.warn "WARNING: Configuration [${node_metric}, ${edge_metric}, ${ranking_algo}] combines different effect-size rescalings (${node_rescaling} and ${edge_rescaling}). This configuration will be skipped."
                 continue
             }
         }
@@ -217,28 +294,28 @@ workflow validate_params {
             error "ERROR: Parameter 'simulation.hub_reuse_prob' must be a number between 0 and 1 (inclusive)"
         }
 
-        // Background structure. All optional; omitting background_topology reproduces the historical
-        // behaviour in which every non-ground-truth pair is exactly independent.
-        def valid_topologies = ['none', 'scale_free', 'erdos_renyi']
-        def topology = params.simulation.background_topology
-        if (topology != null && !valid_topologies.contains(topology)) {
-            error "ERROR: Parameter 'simulation.background_topology' must be one of: ${valid_topologies.join(', ')}"
+        // Scale-free background structure, always on.
+        if (params.simulation.background_topology != null) {
+            error "ERROR: Parameter 'simulation.background_topology' was removed; the background is always scale-free. Delete it from the params file."
         }
-        if (topology != null && topology != 'none') {
-            if (params.simulation.background_strength != null && (!(params.simulation.background_strength instanceof Number) || params.simulation.background_strength <= 0 || params.simulation.background_strength >= 1)) {
-                error "ERROR: Parameter 'simulation.background_strength' must be a number strictly between 0 and 1"
+        ['binary_p_low', 'binary_p_high', 'ordinal_concentration'].each { name ->
+            if (params.simulation[name] != null) {
+                error "ERROR: Parameter 'simulation.${name}' was removed; marginal shapes are fixed in modina. Delete it from the params file."
             }
-            def n_vars = params.simulation.n_bi + params.simulation.n_cont + params.simulation.n_cat
-            if (params.simulation.background_density != null && (!(params.simulation.background_density instanceof Number) || params.simulation.background_density < 1 || params.simulation.background_density >= n_vars)) {
-                error "ERROR: Parameter 'simulation.background_density' must be an integer >= 1 and < the total number of variables (${n_vars})"
-            }
-            // corr_high must stay strictly below the background's smallest eigenvalue, which modina
-            // only knows once the background is built. Catching the guaranteed-impossible case here
-            // (a magnitude a correlation matrix cannot carry at all) keeps the cheap error cheap;
-            // modina raises the exact, background-aware version.
-            if (params.simulation.corr_high >= 1) {
-                error "ERROR: Parameter 'simulation.corr_high' must be below 1 when a background is enabled"
-            }
+        }
+        if (params.simulation.background_strength != null && (!(params.simulation.background_strength instanceof Number) || params.simulation.background_strength <= 0 || params.simulation.background_strength >= 1)) {
+            error "ERROR: Parameter 'simulation.background_strength' must be a number strictly between 0 and 1"
+        }
+        def n_vars = params.simulation.n_bi + params.simulation.n_cont + params.simulation.n_cat
+        if (params.simulation.background_density != null && (!(params.simulation.background_density instanceof Number) || params.simulation.background_density < 1 || params.simulation.background_density >= n_vars)) {
+            error "ERROR: Parameter 'simulation.background_density' must be an integer >= 1 and < the total number of variables (${n_vars})"
+        }
+        // corr_high must stay strictly below the background's smallest eigenvalue, which modina
+        // only knows once the background is built. Catching the guaranteed-impossible case here
+        // (a magnitude a correlation matrix cannot carry at all) keeps the cheap error cheap;
+        // modina raises the exact, background-aware version.
+        if (params.simulation.corr_high >= 1) {
+            error "ERROR: Parameter 'simulation.corr_high' must be below 1"
         }
 
         log.info "✓ All simulation parameters are valid"
@@ -309,9 +386,10 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        def valid_node_metrics = ['STC', 'DC-P', 'DC-E', 'WDC-P', 'WDC-L-P', 'WDC-E', 'PRC-P', 'PRC-L-P', 'PRC-E']
-        def valid_edge_metrics = [/*'int-IS-E',*/ 'diff-P', 'diff-E', 'diff-T-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE', 'diff-L-P']
-        def valid_algorithms = ['PageRank+', 'PageRank', 'absDimontRank', 'DimontRank', 'nodeRank']
+        // Capped variants are added by expandCapConfigurations below when lp_cap is set
+        def valid_node_metrics = nodeMetrics(false)
+        def valid_edge_metrics = edgeMetrics(false)
+        def valid_algorithms = rankingAlgorithms()
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
 
@@ -359,27 +437,16 @@ workflow validate_params {
         configs = removeInvalidConfigurations(configs, warn = true)
     }
 
+
+    // Run the LP x effect-size product metrics additionally with capped -log10(p)
+    validateLpCap(params.diff_net_analysis.lp_cap)
+    configs = expandCapConfigurations(configs, params.diff_net_analysis.lp_cap)
         
     if (configs.size() == 0) {
         error "ERROR: No valid configurations found after validation. Please check your parameters."
     }
 
     // Validate additional differential network analysis parameters
-
-    // Check if any configuration uses int-IS-E
-    def uses_int_is = configs.any { node_metric, edge_metric, ranking_algo ->
-        edge_metric == 'int-IS-E'
-    }
-
-    if (uses_int_is) {
-        if (!params.diff_net_analysis.max_path_length || params.diff_net_analysis.max_path_length == '') {
-            error "ERROR: Parameter 'diff_net_analysis.max_path_length' must be provided when using 'int-IS-E' as edge_metric"
-        }
-        // Check whether it is an integer [0, 4]
-        if (!(params.diff_net_analysis.max_path_length instanceof Number) || params.diff_net_analysis.max_path_length != params.diff_net_analysis.max_path_length.intValue() || params.diff_net_analysis.max_path_length < 0 || params.diff_net_analysis.max_path_length > 4) {
-            error "ERROR: Parameter 'diff_net_analysis.max_path_length' must be an integer between 0 and 4"
-        }
-    }
 
     log.info "✓ All differential network analysis parameters are valid"
 
@@ -401,21 +468,20 @@ workflow validate_params {
     
     log.info "✓ All context-specific network inference parameters are valid"
 
-    // Extract unique (node_metric, edge_metric) pairs from configs
-    def unique_node_metrics = configs.collect { node_metric, edge_metric, ranking_algo ->
-        [node_metric]
-    }.unique()
+    // Extract unique node and edge metrics from configs
+    def unique_node_metrics = configs.collect { node_metric, edge_metric, ranking_algo -> node_metric }.unique()
+    def unique_edge_metrics = configs.collect { node_metric, edge_metric, ranking_algo -> edge_metric }.unique()
 
-    def unique_edge_metrics = configs.collect { node_metric, edge_metric, ranking_algo ->
-        [edge_metric]
-    }.unique()
+    // Number of configurations per ranking algorithm (= rankings per node_ranking job and simulation)
+    def algorithm_counts = configs.countBy { config -> config[2] }
 
 
     log.info "-- Parameter validation completed successfully --"
     
     emit:
     config_combs = Channel.fromList(configs)
-    node_metrics = Channel.fromList(unique_node_metrics).flatten()
-    edge_metrics = Channel.fromList(unique_edge_metrics).flatten()
+    node_metric_groups = Channel.fromList(groupByFamily(unique_node_metrics))
+    edge_metric_groups = Channel.fromList(groupByFamily(unique_edge_metrics))
+    configs_per_algorithm = Channel.value(algorithm_counts)
 
 }

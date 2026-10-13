@@ -24,7 +24,7 @@ ground_truth_palette <- c(
 # Valid focus values
 edge_metrics_subset = c('diff-P', 'int-IS-E', 'diff-E', 'diff-L-PE', 'sum-diff-PE', 'sum-diff-L-PE')
 node_metrics_subset = c('DC-P', 'DC-E', 'STC', 'PRC-P', 'PRC-E', 'WDC-P', 'WDC-E')
-algorithms_subset = c('nodeRank', 'PageRank', 'PageRank+', 'DimontRank', 'absDimontRank')
+algorithms_subset = c('nodeRank', 'PageRank', 'PageRank+', 'MeanEdgeRank', 'MedianEdgeRank', 'MeanProductRank', 'MedianProductRank')
 
 node_metrics <- c("WDC-P", "WDC-E", "DC-P", "DC-E", "PRC-P", "PRC-E", "STC", "None")
 node_metrics_colors <- c(

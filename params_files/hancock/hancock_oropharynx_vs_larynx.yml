@@ -19,7 +19,6 @@ diff_net_analysis:
   filter_param: 0
   filter_metric: "pre-P"
   filter_rule: "zero"
-  max_path_length: 2
   test_type: "nonparametric"
   nan_value: -99
   multiple_testing: "bh"
