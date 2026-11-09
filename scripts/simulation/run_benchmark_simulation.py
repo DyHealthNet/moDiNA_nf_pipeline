@@ -40,8 +40,7 @@ INT_COLS = ['n_simulations', 'seed', 'n_bi', 'n_cont', 'n_cat', 'n_samples_1', '
 FLOAT_COLS = ['corr_low', 'corr_high', 'shift_low', 'shift_high', 'hub_reuse_prob', 'background_strength']
 SIMULATION_COLS = INT_COLS + FLOAT_COLS
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
-DIFF_NET_INT_COLS = ['lp_cap']
-PARAM_COLS = INT_COLS + FLOAT_COLS + DIFF_NET_STR_COLS + DIFF_NET_INT_COLS + ['out_dir']
+PARAM_COLS = INT_COLS + FLOAT_COLS + DIFF_NET_STR_COLS + ['out_dir']
 
 
 def read_runs(path):
@@ -68,7 +67,7 @@ def read_runs(path):
                 raise SystemExit(f'{path}:{line_no}: {row["name"]!r} is partially filled; empty: {", ".join(empty)}')
             run = {'name': row['name'], 'category': category}
             try:
-                run.update({c: int(row[c]) for c in INT_COLS + DIFF_NET_INT_COLS})
+                run.update({c: int(row[c]) for c in INT_COLS})
                 run.update({c: float(row[c]) for c in FLOAT_COLS})
             except ValueError as e:
                 raise SystemExit(f'{path}:{line_no}: {row["name"]!r}: {e}')
@@ -99,7 +98,6 @@ def render_params(run, path_config):
     if path_config:
         lines.append(f'  path_config: "{path_config}"')
     lines += [f'  {c}: "{run[c]}"' for c in DIFF_NET_STR_COLS]
-    lines += [f'  {c}: {run[c]}' for c in DIFF_NET_INT_COLS]
     return '\n'.join(lines) + '\n'
 
 

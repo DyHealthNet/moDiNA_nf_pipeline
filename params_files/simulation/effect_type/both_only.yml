@@ -41,4 +41,3 @@ simulation:
 diff_net_analysis:
   test_type: "parametric"
   multiple_testing: "bh"
-  lp_cap: 10

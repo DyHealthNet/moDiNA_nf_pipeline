@@ -23,8 +23,6 @@ if __name__ == '__main__':
     parser.add_argument('--edge_metrics', type=str, required=True,
                         help='Comma-separated edge-level metrics to compute (e.g., diff-LP,diff-LPxRE); an empty string writes empty placeholder files')
 
-    parser.add_argument('--lp_cap', type=float, required=False, default=None,
-                        help='Cap for -log10(p) in the capped product metrics (diff-LPxRE-cap, diff-LPxVE-cap)')
 
     # Output
     parser.add_argument('--output_prefix', type=str, required=True,
@@ -70,7 +68,6 @@ if __name__ == '__main__':
                 scores1=scores1.copy(),
                 scores2=scores2.copy(),
                 edge_metric=edge_metric,
-                lp_cap=args.lp_cap,
                 name1=name_context_1,
                 name2=name_context_2
             )

@@ -28,8 +28,6 @@ if __name__ == '__main__':
     # Metrics
     parser.add_argument('--node_metrics', type=str, required=True,
                         help='Comma-separated node-level metrics to compute (e.g., STC-P,STC-LP); an empty string writes an empty placeholder file')
-    parser.add_argument('--lp_cap', type=float, required=False, default=None,
-                        help='Cap for -log10(p) in the capped product metrics (e.g. STC-LPxRE-cap)')
     
     parser.add_argument('--multiple_testing', type=str, required=True,
                         help='Multiple testing correction method (e.g., bonferroni, fdr_bh, none)')
@@ -81,8 +79,7 @@ if __name__ == '__main__':
                 nan_value=args.nan_value,
                 num_workers=args.num_workers,
                 meta_file = meta.copy(),
-                test_type = args.test_type,
-                lp_cap = args.lp_cap
+                test_type = args.test_type
             )
 
         nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)

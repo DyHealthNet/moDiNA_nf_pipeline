@@ -21,7 +21,6 @@ process differential_node_inference {
         --context_file_1 "${file_context_1}" \
         --context_file_2 "${file_context_2}" \
         --node_metrics "${meta.node_metrics.join(',')}" \
-        ${params.diff_net_analysis.lp_cap ? "--lp_cap ${params.diff_net_analysis.lp_cap}" : ""} \
         --multiple_testing "${params.diff_net_analysis.multiple_testing}" \
         --nan_value "${params.diff_net_analysis.nan_value}" \
         --num_workers "${task.cpus}" \

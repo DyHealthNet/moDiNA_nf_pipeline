@@ -72,17 +72,13 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
 }
 
 // Metric and algorithm names (keep in sync with moDiNA/src/modina/metrics.py).
-// Every metric is built from one per-context score; the LP x effect-size products additionally have
-// a capped variant ('<metric>-cap', -log10(p) capped at diff_net_analysis.lp_cap).
+// Every metric is built from one per-context score.
 def scoreTypes() { ['P', 'LP', 'RE', 'VE', 'LPxRE', 'LPxVE'] }
-def cappedScoreTypes() { ['LPxRE-cap', 'LPxVE-cap'] }
-def nodeMetrics(capped = true) {
-    def scores = capped ? scoreTypes() + cappedScoreTypes() : scoreTypes()
-    ['WDC', 'PRC', 'STC'].collectMany { family -> scores.collect { score -> "${family}-${score}".toString() } }
+def nodeMetrics() {
+    ['WDC', 'PRC', 'STC'].collectMany { family -> scoreTypes().collect { score -> "${family}-${score}".toString() } }
 }
-def edgeMetrics(capped = true) {
-    def scores = capped ? scoreTypes() + cappedScoreTypes() : scoreTypes()
-    scores.collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE']
+def edgeMetrics() {
+    scoreTypes().collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE']
 }
 def rankingAlgorithms() { ['PageRank+', 'PageRank', 'MeanEdgeRank', 'MedianEdgeRank', 'nodeRank', 'MeanProductRank', 'MedianProductRank'] }
 
@@ -94,9 +90,6 @@ def metricFamily(metric) { metric ? metric.split('-', 2)[0] : 'none' }
 def groupByFamily(metrics) {
     metrics.groupBy { metric -> metricFamily(metric) }.collect { family, members -> [family, members] }
 }
-
-def isProductMetric(metric) { metric && (metric.endsWith('-LPxRE') || metric.endsWith('-LPxVE')) }
-def isCappedMetric(metric) { metric && metric.endsWith('-cap') }
 
 // Effect-size rescaling a metric uses: 'RE' (rank-based), 'VE' (variance-explained) or null (P, LP)
 def effectRescaling(metric) {
@@ -135,40 +128,6 @@ def validateRankingAlgorithm(ranking_algorithm) {
     if (!valid_algorithms.contains(ranking_algorithm)) {
         error "ERROR: Parameter 'diff_net_analysis.ranking_algorithm' must be one of: ${valid_algorithms.join(', ')}"
     }
-}
-
-// lp_cap: empty/null (no cap) or a positive number
-def validateLpCap(lp_cap) {
-    if (lp_cap == null || lp_cap == '') {
-        return
-    }
-    if (!(lp_cap instanceof Number) || lp_cap <= 0) {
-        error "ERROR: Parameter 'diff_net_analysis.lp_cap' must be a positive number (or empty for no cap)"
-    }
-}
-
-// When lp_cap is set, every configuration using an LP x effect-size product metric is run twice:
-// once as given (uncapped) and once with each product metric replaced by its capped variant.
-// Without lp_cap, capped metrics are not available.
-def expandCapConfigurations(configs, lp_cap) {
-    def has_cap = !(lp_cap == null || lp_cap == '')
-    def expanded = []
-    for (config in configs) {
-        def node_metric = config[0]
-        def edge_metric = config[1]
-        if (!has_cap && (isCappedMetric(node_metric) || isCappedMetric(edge_metric))) {
-            error "ERROR: Configuration [${config.join(', ')}] uses a capped metric ('-cap'), which requires 'diff_net_analysis.lp_cap' to be set"
-        }
-        expanded.add(config)
-        if (has_cap && (isProductMetric(node_metric) || isProductMetric(edge_metric))) {
-            expanded.add([
-                isProductMetric(node_metric) ? "${node_metric}-cap".toString() : node_metric,
-                isProductMetric(edge_metric) ? "${edge_metric}-cap".toString() : edge_metric,
-                config[2]
-            ])
-        }
-    }
-    return expanded.unique()
 }
 
 def removeInvalidConfigurations(configs, warn = true){
@@ -386,9 +345,8 @@ workflow validate_params {
     }
 
     if (params.run_type == 'all'){
-        // Capped variants are added by expandCapConfigurations below when lp_cap is set
-        def valid_node_metrics = nodeMetrics(false)
-        def valid_edge_metrics = edgeMetrics(false)
+        def valid_node_metrics = nodeMetrics()
+        def valid_edge_metrics = edgeMetrics()
         def valid_algorithms = rankingAlgorithms()
     
         configs = [valid_node_metrics, valid_edge_metrics, valid_algorithms].combinations()
@@ -438,9 +396,6 @@ workflow validate_params {
     }
 
 
-    // Run the LP x effect-size product metrics additionally with capped -log10(p)
-    validateLpCap(params.diff_net_analysis.lp_cap)
-    configs = expandCapConfigurations(configs, params.diff_net_analysis.lp_cap)
         
     if (configs.size() == 0) {
         error "ERROR: No valid configurations found after validation. Please check your parameters."

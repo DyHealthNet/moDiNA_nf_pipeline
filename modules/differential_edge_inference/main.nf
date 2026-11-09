@@ -18,7 +18,6 @@ process differential_edge_inference {
             --network_context_1 "${network_context_1}" \
             --network_context_2 "${network_context_2}" \
             --edge_metrics "${meta.edge_metrics.join(',')}" \
-            ${params.diff_net_analysis.lp_cap ? "--lp_cap ${params.diff_net_analysis.lp_cap}" : ""} \
             --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}"
     """
     
