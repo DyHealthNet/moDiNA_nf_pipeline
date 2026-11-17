@@ -22,6 +22,13 @@ include {evaluation_mean_shifts} from './modules/evaluation_mean_shifts/main.nf'
 def outputPrefix(id) { params.data_type == 'simulation' ? "sim${id}".toString() : '' }
 
 // The inference scripts name the files of the empty placeholder metric '' after Python's None
+// Ranking batch of a configuration (keep in sync with rankingBatch / separateEdgeMetrics in
+// subworkflows/validate_params/main.nf): diff-Z configurations are ranked in batches of their own, so that the
+// batches (and the -resume cache) of all other configurations are unchanged.
+def rankingBatch(edge_metric, algorithm) {
+    edge_metric in ['diff-Z'] ? "${algorithm}|${edge_metric}".toString() : algorithm
+}
+
 def metricFileName(id, metric, suffix) { "${outputPrefix(id)}_${metric ?: 'None'}_${suffix}".toString() }
 
 // Batched processes emit one file per metric/configuration; pick the one with the expected name
@@ -186,8 +193,10 @@ workflow {
             [meta_node + [edge_metric: edge_m, algorithm: algo], node_file, edge_file, stats_file, file_meta]
         }
 
-    // One ranking job per simulation and algorithm. groupKey carries the group size so each group is
-    // released as soon as it is complete; sorting keeps the job's inputs (and so its -resume hash) stable.
+    // One ranking job per simulation and ranking batch (the algorithm; diff-Z configurations in a batch of their
+    // own, see rankingBatch). groupKey carries the group size so each group is released as soon as it is complete;
+    // sorting keeps the job's inputs (and so its -resume hash) stable. The key of a regular batch is
+    // [id, algorithm], as before diff-Z was added, so those jobs are found in the -resume cache.
     ranking_batches = ranking_input
         .combine(validate_params.out.configs_per_algorithm)
         .map { meta, node_file, edge_file, stats_file, meta_file, configs_per_algorithm ->
@@ -195,7 +204,9 @@ workflow {
                           node_file: node_file.name, edge_file: edge_file.name, stats_file: stats_file.name,
                           node_path: node_file.toString(), edge_path: edge_file.toString(),
                           output_prefix: "${outputPrefix(meta.id) ? outputPrefix(meta.id) + '_' : ''}${meta.node_metric}_${meta.edge_metric}_${meta.algorithm}".toString()]
-            [groupKey(meta.subMap(['id', 'algorithm']), configs_per_algorithm[meta.algorithm]), config, node_file, edge_file, stats_file, meta_file]
+            def batch = rankingBatch(meta.edge_metric, meta.algorithm)
+            def key = meta.subMap(['id', 'algorithm']) + (batch == meta.algorithm ? [:] : [batch: batch])
+            [groupKey(key, configs_per_algorithm[batch]), config, node_file, edge_file, stats_file, meta_file]
         }
         .groupTuple()
         .map { key, configs, node_files, edge_files, stats_files, meta_files ->

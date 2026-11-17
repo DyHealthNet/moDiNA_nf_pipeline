@@ -77,14 +77,28 @@ def scoreTypes() { ['P', 'LP', 'RE', 'VE', 'LPxRE', 'LPxVE'] }
 def nodeMetrics() {
     ['WDC', 'PRC', 'STC'].collectMany { family -> scoreTypes().collect { score -> "${family}-${score}".toString() } }
 }
+// Edge metrics computed in a job of their own and ranked in batches of their own (see metricFamily and
+// rankingBatch), so that adding them leaves the jobs of all other metrics, and their -resume cache, unchanged.
+def separateEdgeMetrics() { ['diff-Z'] }
 def edgeMetrics() {
-    scoreTypes().collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE']
+    scoreTypes().collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE'] + separateEdgeMetrics()
 }
 def rankingAlgorithms() { ['PageRank+', 'PageRank', 'MeanEdgeRank', 'MedianEdgeRank', 'nodeRank', 'MeanProductRank', 'MedianProductRank'] }
 
-// Family of a node/edge metric (STC, WDC, PRC, diff, sum); the empty placeholder metric '' is 'none'.
-// Differential inference runs one job per family and simulation.
-def metricFamily(metric) { metric ? metric.split('-', 2)[0] : 'none' }
+// Family of a node/edge metric (STC, WDC, PRC, diff, sum, or the metric itself for separateEdgeMetrics); the empty
+// placeholder metric '' is 'none'. Differential inference runs one job per family and simulation.
+def metricFamily(metric) {
+    if (!metric) return 'none'
+    if (separateEdgeMetrics().contains(metric)) return metric
+    return metric.split('-', 2)[0]
+}
+
+// Ranking batch of a configuration: one node_ranking job per simulation, algorithm and batch. The configurations of
+// separateEdgeMetrics form batches of their own ('<algorithm>|<edge metric>'), all others one batch per algorithm.
+// Keep in sync with rankingBatch in main.nf.
+def rankingBatch(edge_metric, algorithm) {
+    separateEdgeMetrics().contains(edge_metric) ? "${algorithm}|${edge_metric}".toString() : algorithm
+}
 
 // [[family, [metrics...]], ...] in the order the metrics first appear
 def groupByFamily(metrics) {
@@ -427,8 +441,8 @@ workflow validate_params {
     def unique_node_metrics = configs.collect { node_metric, edge_metric, ranking_algo -> node_metric }.unique()
     def unique_edge_metrics = configs.collect { node_metric, edge_metric, ranking_algo -> edge_metric }.unique()
 
-    // Number of configurations per ranking algorithm (= rankings per node_ranking job and simulation)
-    def algorithm_counts = configs.countBy { config -> config[2] }
+    // Number of configurations per ranking batch (= rankings per node_ranking job and simulation, see rankingBatch)
+    def algorithm_counts = configs.countBy { config -> rankingBatch(config[1], config[2]) }
 
 
     log.info "-- Parameter validation completed successfully --"

@@ -85,18 +85,30 @@ if __name__ == '__main__':
                              'already-placed node as a hub instead of drawing two fresh nodes, spread '
                              'evenly across node types (0.0 = one edge per node, the default)')
 
-    # Shared scale-free background correlation structure. Built once and copied to both contexts, so every
+    # Shared background correlation structure (correlated modules by default, or scale-free). Built once
+    # and copied to both contexts, so every
     # non-ground-truth pair holds identical values in the two correlation matrices and its true
     # between-context difference is exactly zero.
     parser.add_argument('--background_strength', type=float, default=0.2,
-                        help='Target mean |r| over the directly wired pairs of the background')
+                        help='Scale-free background only: target mean |r| over the directly wired pairs')
     parser.add_argument('--background_density', type=int, default=2,
-                        help='Connections each node makes when it is added to the background '
-                             'network')
+                        help='Scale-free background only: connections each node makes when it is '
+                             'added to the background network')
     parser.add_argument('--background_seed', type=int, default=None,
                         help='Seed for the background\'s own random generator, kept separate from '
                              'the streams the rest of the simulation draws from. Omit for a fresh '
                              'background per replicate')
+    parser.add_argument('--background_model', choices=['scale_free', 'modules'], default='modules',
+                        help="'modules' (default): a dense background of correlated modules (from "
+                             "module_fraction or module_size, and module_correlation); 'scale_free': "
+                             'a sparse scale-free network (from background_strength/background_density)')
+    parser.add_argument('--module_size', type=int, default=None,
+                        help='Variables per module of the module background; overrides module_fraction')
+    parser.add_argument('--module_fraction', type=float, default=0.1,
+                        help='Module size as a share of all variables (default 0.1), used unless '
+                             'module_size is given')
+    parser.add_argument('--module_correlation', type=float, default=0.2,
+                        help='Correlation between the module factors of the module background, in [0, 1)')
 
     parser.add_argument('--seed', type=int, default=None,
                         help='Seed for the planting and sampling streams (`random` and `np.random`). '
@@ -143,7 +155,11 @@ if __name__ == '__main__':
                            hub_reuse_prob = args.hub_reuse_prob,
                            background_strength = args.background_strength,
                            background_density = args.background_density,
-                           background_seed = args.background_seed)
+                           background_seed = args.background_seed,
+                           background_model = args.background_model,
+                           module_size = args.module_size,
+                           module_fraction = args.module_fraction,
+                           module_correlation = args.module_correlation)
 
     # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.

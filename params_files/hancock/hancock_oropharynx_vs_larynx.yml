@@ -1,24 +1,36 @@
+# HANCOCK, Tumour site: oropharynx vs. larynx.
+# Context files are created by hancock_scripts/context_creation.py (see hancock_scripts/README.md).
+# Run from moDiNA_nf_pipeline/:
+#   nextflow run main.nf -profile conda,slurm -params-file params_files/hancock/hancock_oropharynx_vs_larynx.yml
+
 name_context_1: "Oropharynx"
 name_context_2: "Larynx"
-run_type: "file"
+run_type: "file"            # run the configurations listed in diff_net_analysis.path_config
 data_type: "real"
-out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/oropharynx_vs_larynx/"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/"
+work_dir: "./work"
+evaluation: false           # no ground truth for real data
 
 real_world_data:
-  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/oropharynx_vs_larynx/primary_tumor_site_4.csv"
-  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/oropharynx_vs_larynx/primary_tumor_site_2.csv"
-  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/oropharynx_vs_larynx/primary_tumor_site_metadata.csv"
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/primary_tumor_site_4.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/primary_tumor_site_2.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/primary_tumor_site_metadata.csv"
 
 diff_net_analysis:
-  path_config: "input_samplesheet.csv"
-  edge_metric: "pre-P"
-  node_metric: "STC"
-  ranking_algorithm: "direct_node"
+  # Configurations to run: the ten best configurations of the simulation benchmark
+  path_config: "top_10_configs_on_sim_samplesheet.csv"
+  # Not used: only read when run_type is "single"
+  node_metric: ""
+  edge_metric: ""
+  ranking_algorithm: ""
+  # Context network inference
+  test_type: "nonparametric"  # tests for continuous variables; the benchmark used "parametric"
+  multiple_testing: "bh"      # Benjamini-Hochberg
+  nan_value: -99              # missing-value code of the HANCOCK data
+  n_min_valid: 10             # minimum complete samples per pairwise test
+  # Edge filtering: disabled (filter_target empty); the other filter parameters are then not used
   filter_target: ""
   filter_method: ""
-  filter_param: 0
-  filter_metric: "pre-P"
-  filter_rule: "zero"
-  test_type: "nonparametric"
-  nan_value: -99
-  multiple_testing: "bh"
+  filter_param: ""
+  filter_metric: ""
+  filter_rule: ""

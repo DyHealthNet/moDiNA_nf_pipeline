@@ -56,6 +56,10 @@ process simulate_copula {
             --background_strength ${params.simulation.background_strength ?: 0.2} \
             --background_density ${params.simulation.background_density ?: 2} \
             ${params.simulation.background_seed != null ? "--background_seed ${params.simulation.background_seed + meta.id}" : ''} \
+            --background_model ${params.simulation.background_model ?: 'modules'} \
+            ${params.simulation.module_size ? "--module_size ${params.simulation.module_size}" : ''} \
+            --module_fraction ${params.simulation.module_fraction ?: 0.1} \
+            --module_correlation ${params.simulation.module_correlation != null ? params.simulation.module_correlation : 0.2} \
             ${params.simulation.seed != null ? "--seed ${params.simulation.seed + meta.id}" : ''} \
             --output_suffix "${meta.id}"
     """

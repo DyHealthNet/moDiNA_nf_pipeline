@@ -1,0 +1,38 @@
+# TCGA LUAD, sex: male vs. female (clinical variables, RPPA proteins and the 5,000 most variable CpG islands,
+# mean M-value per island).
+# Context files are created by luad_scripts/prepare_luad.py and luad_scripts/context_creation.py
+# (see luad_scripts/README.md).
+# Run from moDiNA_nf_pipeline/:
+#   nextflow run main.nf -profile conda,slurm -params-file params_files/luad/tcga_luad_sex_clin_prot_methyl.yml
+
+name_context_1: "Male"
+name_context_2: "Female"
+run_type: "file"            # run the configurations listed in diff_net_analysis.path_config
+data_type: "real"
+out_dir: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_methyl_recoded/"
+work_dir: "./work"
+evaluation: false           # no ground truth for real data
+
+real_world_data:
+  path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_methyl_recoded/sex_0.csv"
+  path_context_2: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_methyl_recoded/sex_1.csv"
+  path_meta: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_methyl_recoded/sex_metadata.csv"
+
+diff_net_analysis:
+  # Configurations to run: the ten best configurations of the simulation benchmark
+  path_config: "top_5_configs_on_sim_samplesheet.csv"
+  # Not used: only read when run_type is "single"
+  node_metric: ""
+  edge_metric: ""
+  ranking_algorithm: ""
+  # Context network inference
+  test_type: "nonparametric"  # tests for continuous variables; the benchmark used "parametric"
+  multiple_testing: "bh"      # Benjamini-Hochberg
+  nan_value: -99              # missing-value code of the LUAD data
+  n_min_valid: 10             # minimum complete samples per pairwise test
+  # Edge filtering: disabled (filter_target empty); the other filter parameters are then not used
+  filter_target: ""
+  filter_method: ""
+  filter_param: ""
+  filter_metric: ""
+  filter_rule: ""

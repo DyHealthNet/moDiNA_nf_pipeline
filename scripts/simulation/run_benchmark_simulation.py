@@ -14,7 +14,11 @@ CSV conventions:
     below it.
   * A row whose parameter columns are all empty is a placeholder for a level that is identical to
     the baseline (e.g. n_500 on the sample-size axis). It is skipped: the baseline run is that level.
-  * Every other row must be complete.
+  * Every other row must be complete. Exception: background_model, module_size, module_fraction and
+    module_correlation may be left blank (defaults: modules, none, 0.1, 0.2; a blank module_size means
+    module_fraction x the number of variables). background_strength/background_density are only used by
+    background_model scale_free.
+  * The scale-free benchmark of the first submission is benchmark_runs_scale_free.csv (run it with --csv).
 
 Run with: python3 run_benchmark_simulation.py [--only NAME_OR_CATEGORY ...] [--dry-run]
           [--resume] [--profile conda,slurm] [--path-config configs.csv] [--nextflow PATH]
@@ -39,6 +43,10 @@ INT_COLS = ['n_simulations', 'seed', 'n_bi', 'n_cont', 'n_cat', 'n_samples_1', '
             'background_density', 'background_seed']
 FLOAT_COLS = ['corr_low', 'corr_high', 'shift_low', 'shift_high', 'hub_reuse_prob', 'background_strength']
 SIMULATION_COLS = INT_COLS + FLOAT_COLS
+# Background model columns: optional, a blank cell (or a missing column) means the default, the module background
+# (benchmark_runs_scale_free.csv names scale_free explicitly). module_size None = module_fraction x n_vars.
+OPTIONAL_COLS = {'background_model': ('modules', str), 'module_size': (None, int), 'module_fraction': (0.1, float),
+                 'module_correlation': (0.2, float)}
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
 PARAM_COLS = INT_COLS + FLOAT_COLS + DIFF_NET_STR_COLS + ['out_dir']
 
@@ -69,6 +77,7 @@ def read_runs(path):
             try:
                 run.update({c: int(row[c]) for c in INT_COLS})
                 run.update({c: float(row[c]) for c in FLOAT_COLS})
+                run.update({c: cast(row[c]) if row.get(c) else default for c, (default, cast) in OPTIONAL_COLS.items()})
             except ValueError as e:
                 raise SystemExit(f'{path}:{line_no}: {row["name"]!r}: {e}')
             run.update({c: row[c] for c in DIFF_NET_STR_COLS + ['out_dir']})
@@ -94,6 +103,8 @@ def render_params(run, path_config):
         'simulation:',
     ]
     lines += [f'  {c}: {run[c]}' for c in SIMULATION_COLS]
+    lines += [f'  {c}: "{run[c]}"' if isinstance(run[c], str) else f'  {c}: {"null" if run[c] is None else run[c]}'
+              for c in OPTIONAL_COLS]
     lines += ['', 'diff_net_analysis:']
     if path_config:
         lines.append(f'  path_config: "{path_config}"')
@@ -109,10 +120,40 @@ def write_params(run, path_config):
     return path
 
 
+def last_session(params_file):
+    """Session ID of the most recent run of this params file in .nextflow/history, or None.
+
+    Every run is a Nextflow session of its own, and a bare -resume only looks into the cache of the last
+    session of the pipeline directory (usually a different run). Runs with a custom -work-dir are ignored, as
+    their cached tasks live in another work directory, and so are -preview runs, which execute no task. A resumed
+    run keeps its session ID, so the most recent entry carries the cache of all earlier runs of this params file."""
+    history = os.path.join(PIPELINE_DIR, '.nextflow', 'history')
+    if not os.path.exists(history):
+        return None
+    target = os.path.realpath(params_file)
+    session = None
+    with open(history) as f:
+        for line in f:
+            fields = line.rstrip('\n').split('\t')
+            if len(fields) < 7:
+                continue
+            tokens = fields[6].split()
+            if '-params-file' not in tokens or {'-work-dir', '-w', '-preview'} & set(tokens):
+                continue
+            i = tokens.index('-params-file') + 1
+            if i < len(tokens) and os.path.realpath(os.path.join(PIPELINE_DIR, tokens[i])) == target:
+                session = fields[5]
+    return session
+
+
 def run_pipeline(params_file, nextflow, profile, resume, dry_run):
     cmd = [nextflow, 'run', 'main.nf', '-profile', profile, '-params-file', params_file]
     if resume:
-        cmd.append('-resume')
+        session = last_session(params_file)
+        cmd += ['-resume'] + ([session] if session else [])
+        if not session:
+            print('  no earlier session of this params file in .nextflow/history: -resume without session ID',
+                  flush=True)
     print('  $ ' + ' '.join(cmd), flush=True)
     if dry_run:
         return 0
@@ -125,7 +166,9 @@ def main():
     ap.add_argument('--only', nargs='+', metavar='NAME_OR_CATEGORY',
                     help='run only these runs and/or categories, e.g. --only baseline prevalence')
     ap.add_argument('--dry-run', action='store_true', help='write the params files and print the commands, run nothing')
-    ap.add_argument('--resume', action='store_true', help='pass -resume to Nextflow')
+    ap.add_argument('--resume', action='store_true',
+                    help='pass -resume to Nextflow, with the session ID of the last run of each params file '
+                         '(from .nextflow/history)')
     ap.add_argument('--profile', default='conda,slurm', help='Nextflow profile(s) (default: conda,slurm)')
     ap.add_argument('--path-config', default=None,
                     help='samplesheet of moDiNA configurations; sets run_type "file" (default: run_type "all")')
