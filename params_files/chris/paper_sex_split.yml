@@ -1,6 +1,6 @@
 name_context_1: "Male"
 name_context_2: "Female"
-run_type: "file"
+run_type: "single"
 data_type: "real"
 out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/out/"
 work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/work/"
@@ -8,13 +8,13 @@ work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/work/"
 real_world_data:
   path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/male_data.csv"
   path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/female_data.csv"
-  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/meta_sex.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/meta_modina.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"
-  edge_metric: ""
-  node_metric: ""
-  ranking_algorithm: ""
+  edge_metric: "diff-L-P"
+  node_metric: "STC"
+  ranking_algorithm: "PageRank+"
   filter_target: ""
   filter_method: ""
   filter_param: 0

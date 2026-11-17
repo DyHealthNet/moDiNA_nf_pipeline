@@ -1,6 +1,6 @@
 name_context_1: "HCU"
 name_context_2: "no-HCU"
-run_type: "file"
+run_type: "single"
 data_type: "real"
 out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/out/"
 work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/work/"
@@ -8,13 +8,13 @@ work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/work/"
 real_world_data:
   path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/hcu_data.csv"
   path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/no_hcu_data.csv"
-  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/meta_hcu.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/meta_modina.csv"
 
 diff_net_analysis:
   path_config: "input_samplesheet.csv"
-  edge_metric: ""
-  node_metric: ""
-  ranking_algorithm: ""
+  edge_metric: "diff-L-P"
+  node_metric: "STC"
+  ranking_algorithm: "PageRank+"
   filter_target: ""
   filter_method: ""
   filter_param: 0
