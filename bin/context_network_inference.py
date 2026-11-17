@@ -23,6 +23,8 @@ if __name__ == '__main__':
                         help='Correction method for multiple testing')
     parser.add_argument('--nan_value', type=int, default=-89,
                         help='Value that represents the NA values in the input data')
+    parser.add_argument('--n_min_valid', type=int, default=10,
+                        help='Minimum number of samples (after pairwise NA removal) a pairwise test must be based on; pairs below are excluded')
     
     # Additional parameters
     parser.add_argument('--num_workers', type=int, default=1,
@@ -44,12 +46,14 @@ if __name__ == '__main__':
         correction=args.multiple_testing,
         nan_value=args.nan_value,
         num_workers=args.num_workers,
+        n_min_valid=args.n_min_valid,
     )
     
     association_scores.to_csv(f'{args.output_prefix}.csv', index=False)
 
     # Variables flagged (and excluded) in this context -- and the specific (label1, label2)
-    # pairs dropped because NApy returned a NaN raw-P/raw-E for them -- so both can be told apart
+    # pairs dropped because NApy returned a NaN raw-P/raw-E for them or because they were tested on
+    # fewer than n_min_valid samples ('reason' column) -- so both can be told apart
     # from genuinely tested associations. Both are already excluded from association_scores
     # entirely (not filled with sentinel values). Always written (even if empty), so downstream
     # Nextflow output declarations don't need to special-case a missing file.
@@ -57,7 +61,7 @@ if __name__ == '__main__':
     pd.DataFrame({'label': flagged_variables}).to_csv(f'{args.output_prefix}_flagged_variables.csv', index=False)
 
     scores_na_records = association_scores.attrs.get('scores_na', [])
-    scores_na = pd.DataFrame(scores_na_records, columns=['label1', 'label2', 'test_type'])
+    scores_na = pd.DataFrame(scores_na_records, columns=['label1', 'label2', 'test_type', 'n', 'reason'])
     scores_na.to_csv(f'{args.output_prefix}_scores_na.csv', index=False)
 
     print("Context network inference completed successfully")

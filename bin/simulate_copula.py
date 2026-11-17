@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-import modina
 import argparse
+import random
+
+import numpy as np
+import modina
 
 
 if __name__ == '__main__':
@@ -65,19 +68,61 @@ if __name__ == '__main__':
     parser.add_argument('--n_both_bi_cont', type=int, required=True,
                         help='Number of binary-continuous node pairs with both an artificially introduced mean shift and correlation difference')
 
-    # Magnitude parameters
-    parser.add_argument('--shift', type=float, required=True,
-                        help='Magnitude of the mean shift')
-    parser.add_argument('--corr', type=float, required=True,
-                        help='Magnitude of the correlation difference (measured as correlation coefficient between 0 and 1)')
+    # Magnitude parameters. Each ground truth effect draws its own magnitude uniformly from the
+    # given range, so one run spans the whole weak-to-strong spectrum instead of a single operating
+    # point; the drawn value is written into the ground truth files for post-hoc ranking/binning.
+    # These replace the former single-valued --shift/--corr, which modina no longer accepts.
+    parser.add_argument('--corr_low', type=float, required=True,
+                        help='Lower end of the correlation-difference range (0 <= corr_low <= corr_high <= 0.95)')
+    parser.add_argument('--corr_high', type=float, required=True,
+                        help='Upper end of the correlation-difference range (0 <= corr_low <= corr_high <= 0.95)')
+    parser.add_argument('--shift_low', type=float, required=True,
+                        help='Lower end of the mean-shift range (0 <= shift_low <= shift_high)')
+    parser.add_argument('--shift_high', type=float, required=True,
+                        help='Upper end of the mean-shift range (0 <= shift_low <= shift_high)')
     parser.add_argument('--hub_reuse_prob', type=float, default=0.0,
-                        help='Probability that a new correlation/both pair reuses an already-placed '
-                             'node as a hub instead of drawing two fresh nodes (0.0 = one edge per node, the default)')
+                        help='Fraction of each pair type\'s correlation/both pairs that reuse an '
+                             'already-placed node as a hub instead of drawing two fresh nodes, spread '
+                             'evenly across node types (0.0 = one edge per node, the default)')
+
+    # Shared background correlation structure (correlated modules by default, or scale-free). Built once
+    # and copied to both contexts, so every
+    # non-ground-truth pair holds identical values in the two correlation matrices and its true
+    # between-context difference is exactly zero.
+    parser.add_argument('--background_strength', type=float, default=0.2,
+                        help='Scale-free background only: target mean |r| over the directly wired pairs')
+    parser.add_argument('--background_density', type=int, default=2,
+                        help='Scale-free background only: connections each node makes when it is '
+                             'added to the background network')
+    parser.add_argument('--background_seed', type=int, default=None,
+                        help='Seed for the background\'s own random generator, kept separate from '
+                             'the streams the rest of the simulation draws from. Omit for a fresh '
+                             'background per replicate')
+    parser.add_argument('--background_model', choices=['scale_free', 'modules'], default='modules',
+                        help="'modules' (default): a dense background of correlated modules (from "
+                             "module_fraction or module_size, and module_correlation); 'scale_free': "
+                             'a sparse scale-free network (from background_strength/background_density)')
+    parser.add_argument('--module_size', type=int, default=None,
+                        help='Variables per module of the module background; overrides module_fraction')
+    parser.add_argument('--module_fraction', type=float, default=0.1,
+                        help='Module size as a share of all variables (default 0.1), used unless '
+                             'module_size is given')
+    parser.add_argument('--module_correlation', type=float, default=0.2,
+                        help='Correlation between the module factors of the module background, in [0, 1)')
+
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Seed for the planting and sampling streams (`random` and `np.random`). '
+                             'Omit for a fresh, non-reproducible draw')
+
     parser.add_argument('--output_suffix', type=str, default='',
                         help='Suffix to append to output filenames (e.g., "_sim1")')
 
-    
+
     args = parser.parse_args()
+
+    if args.seed is not None:
+        random.seed(args.seed)
+        np.random.seed(args.seed)
     
     # Run simulation
     context1, context2, meta, (shift_nodes, corr_nodes, shift_corr_nodes), effects = modina.simulate_copula(
@@ -103,11 +148,20 @@ if __name__ == '__main__':
                            n_both_bi_cont = args.n_both_bi_cont,
                            n_both_bi_cat = args.n_both_bi_cat,
                            n_both_cont_cat = args.n_both_cont_cat,
-                           shift = args.shift,
-                           corr =args.corr,
-                           hub_reuse_prob = args.hub_reuse_prob)
+                           corr_low = args.corr_low,
+                           corr_high = args.corr_high,
+                           shift_low = args.shift_low,
+                           shift_high = args.shift_high,
+                           hub_reuse_prob = args.hub_reuse_prob,
+                           background_strength = args.background_strength,
+                           background_density = args.background_density,
+                           background_seed = args.background_seed,
+                           background_model = args.background_model,
+                           module_size = args.module_size,
+                           module_fraction = args.module_fraction,
+                           module_correlation = args.module_correlation)
 
-    # Per-node ground-truth stats (n_edges_tweaked, sum_jittered_magnitude) for save_gt's node file;
+    # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
     gt_nodes = set(shift_nodes)
     for pair in corr_nodes + shift_corr_nodes:
@@ -119,6 +173,8 @@ if __name__ == '__main__':
     context1.to_csv(f'{args.context_1}_simulated_data_{args.output_suffix}.csv', index=False)
     context2.to_csv(f'{args.context_2}_simulated_data_{args.output_suffix}.csv', index=False)
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats)
+    # `node_shift_magnitude` adds the per-node drawn shift as a further named column. Ranged draws
+    # make this necessary: without it the realized shift of a node is unrecoverable from the output.
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'])
     modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'])
     

@@ -68,8 +68,28 @@ To specify the configurations, you can either change the parameters in the nextf
 | `simulation.n_both_bi_cont` | `integer` | `2` | Number of binary–continuous node pairs with both a mean shift and a correlation difference. |
 | `simulation.n_both_bi_cat` | `integer` | `2` | Number of binary–categorical node pairs with both a mean shift and a correlation difference. |
 | `simulation.n_both_cont_cat` | `integer` | `2` | Number of continuous–categorical node pairs with both a mean shift and a correlation difference. |
-| `simulation.shift` | `float` | `0.5` | Magnitude of the mean shift introduced in shifted nodes. Must be ≥ 0. |
-| `simulation.corr` | `float` | `0.7` | Target correlation difference introduced in correlated node pairs. Must be in [0, 1]. |
+| `simulation.corr_low` | `float` | `0.1` | Lower end of the range each correlation difference is drawn from. Must satisfy `0 ≤ corr_low ≤ corr_high ≤ 0.95`. |
+| `simulation.corr_high` | `float` | `0.7` | Upper end of that range. Set equal to `corr_low` for a single fixed magnitude. |
+| `simulation.shift_low` | `float` | `0.2` | Lower end of the range each mean shift is drawn from. Must satisfy `0 ≤ shift_low ≤ shift_high`. |
+| `simulation.shift_high` | `float` | `0.8` | Upper end of that range. Set equal to `shift_low` for a single fixed magnitude. |
+| `simulation.hub_reuse_prob` | `float` | `0.5` | Fraction of each pair type's correlation/both pairs that reuse an already-placed node as a hub instead of drawing two fresh nodes. The count is fixed per pair type (not drawn per edge) and spread evenly across node types, so the number of ground truth nodes per type is consistent. `0.0` gives one edge per node. Must be in [0, 1]. |
+| `simulation.background_strength` | `float` | `0.2` | Target mean \|r\| over the directly wired pairs of the background. The background is always a scale-free network shared by both contexts. Must be strictly between 0 and 1. |
+| `simulation.background_density` | `integer` | `2` | Connections each node makes when it is added to the background network. Must be ≥ 1 and < the total number of variables. |
+| `simulation.background_seed` | `integer` | `null` | Base seed for the background's own random generator, offset by the replicate id so each replicate draws its own background reproducibly. Leave unset for a fresh, non-reproducible background per replicate. |
+| `simulation.seed` | `integer` | `null` | Base seed for planting the ground truth and sampling the data, offset by the replicate id so replicate *k* draws the same way across configs. Leave unset for a non-reproducible draw. |
+
+> **Migration note.** `simulation.shift` and `simulation.corr` were replaced by the four `*_low`/`*_high`
+> parameters above. Each ground truth effect now draws its own magnitude uniformly from the given
+> range, and the drawn value is recorded per node/edge in the ground truth files (`shift` and
+> `corr` columns), so a single run can be binned by realized effect size rather
+> than producing one operating point. To reproduce a previous run exactly, set
+> `corr_low: corr_high: <old corr>` and `shift_low: shift_high: <old shift>`. Params files still
+> carrying the old keys fail validation with an explicit message rather than silently ignoring them.
+>
+> Note that `background_strength` and `corr_high` compete for the same positive-definiteness budget:
+> a stronger background lowers the smallest eigenvalue of `Σ_base`, below which `corr_high` must stay,
+> and a hub reused across several edges spends the sum of their squared magnitudes against it. Raise
+> the two together only after checking that a simulation still runs.
 
 ### Real-World Data Parameters (`real_world_data.*`)
 
@@ -86,17 +106,17 @@ Only required when `data_type = 'real'`.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `diff_net_analysis.path_config` | `path` | `'input_samplesheet.csv'` | Path to the CSV samplesheet listing moDiNA configurations to run. Required when `run_type = 'file'`. Columns: `node_metric`, `edge_metric`, `ranking_algorithm`. |
-| `diff_net_analysis.node_metric` | `string` | `'STC'` | Node-level differential metric. Used when `run_type = 'single'`. One of: `STC`, `DC-P`, `DC-E`, `WDC-P`, `WDC-L-P`, `WDC-E`, `PRC-P`, `PRC-L-P`, `PRC-E`, `None`. |
-| `diff_net_analysis.edge_metric` | `string` | `'diff-E'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `diff-P`, `diff-E`, `diff-L-P` (difference of -log10(p-values) between contexts), `diff-L-PE` (difference of -log10(p) × rescaled effect size), `sum-diff-PE`, `sum-diff-L-PE`, `None`. |
-| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `absDimontRank`, `DimontRank`, `nodeRank`. |
+| `diff_net_analysis.node_metric` | `string` | `'STC-P'` | Node-level differential metric. Used when `run_type = 'single'`. One of: `WDC-<score>`, `PRC-<score>` or `STC-<score>` with score `P`, `LP`, `RE`, `VE`, `LPxRE`, `LPxVE` (e.g. `STC-P`), or `None`. |
+| `diff_net_analysis.edge_metric` | `string` | `'diff-LPxRE'` | Edge-level differential metric. Used when `run_type = 'single'`. One of: `diff-P`, `diff-LP`, `diff-RE`, `diff-VE`, `diff-LPxRE`, `diff-LPxVE`, `sum-LP-VE`, `sum-LP-RE`, `diff-Z`, or `None`. See the score definitions in the Python package documentation. |
+| `diff_net_analysis.ranking_algorithm` | `string` | `'PageRank+'` | Algorithm used to rank nodes in the differential network. Used when `run_type = 'single'`. One of: `PageRank+`, `PageRank`, `MeanEdgeRank`, `MedianEdgeRank`, `nodeRank`, `MeanProductRank`, `MedianProductRank`. Configurations combining a node and an edge metric (`PageRank+`, `MeanProductRank`, `MedianProductRank`) are skipped with a warning if one metric uses the RE and the other the VE effect-size rescaling. |
 | `diff_net_analysis.filter_target` | `string` | `''` | Which network to filter. Leave empty to skip filtering. `context-specific` filters the two context networks before differential analysis (using `filter_metric` and `filter_rule`); `differential` filters the differential network on the computed `edge_metric` (`filter_metric` and `filter_rule` are ignored). When set, `filter_method` is required. |
 | `diff_net_analysis.filter_method` | `string` | `''` | Method to filter edges. One of: `degree`, `density`, `quantile`. Required when `filter_target` is set. |
 | `diff_net_analysis.filter_param` | `integer / float` | `2` | Parameter for the chosen filter method. Integer for `degree`; float in (0, 1) for `density` and `quantile`. |
 | `diff_net_analysis.filter_metric` | `string` | `'raw-P'` | Edge score used as the basis for filtering. One of: `raw-P`, `rescaled-E`. Required when `filter_method` is set and `filter_target` is `context-specific`. |
 | `diff_net_analysis.filter_rule` | `string` | `'zero'` | Rule applied when filtering edges. One of: `zero` (set filtered edges to zero), `union` (keep edges present in at least one context). Required when `filter_method` is set and `filter_target` is `context-specific`. |
-| `diff_net_analysis.max_path_length` | `integer` | `2` | Maximum path length used for the `int-IS` edge metric. Must be an integer in [0, 4]. Only relevant when `int-IS` is selected as an edge metric. |
 | `diff_net_analysis.test_type` | `string` | `'nonparametric'` | Type of statistical test used during context network inference. One of: `parametric`, `nonparametric`. |
 | `diff_net_analysis.nan_value` | `integer` | `-89` | Sentinel value in input data that represents missing / NA values. |
+| `diff_net_analysis.n_min_valid` | `integer` | `10` | Minimum number of samples (after pairwise removal of missing values) a pairwise association test must be based on. Edges below this in either context are removed from both. |
 | `diff_net_analysis.multiple_testing` | `string` | `'bh'` | Multiple testing correction method applied to association p-values. One of: `bh` (Benjamini–Hochberg), `by` (Benjamini–Yekutieli). |
 
 

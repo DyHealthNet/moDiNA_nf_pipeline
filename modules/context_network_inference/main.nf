@@ -14,6 +14,9 @@ process context_network_inference {
         tuple val(meta), path("${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores_scores_na.csv"), emit: scores_na
 
     script:
+    // Params files replace the whole diff_net_analysis map, so n_min_valid may be absent there;
+    // the flag is then omitted and the script's default (10) applies.
+    def n_min_valid_arg = params.diff_net_analysis.n_min_valid != null ? "--n_min_valid ${params.diff_net_analysis.n_min_valid}" : ""
     """
         context_network_inference.py \\
             --context_file "${file_context_data}" \\
@@ -22,6 +25,7 @@ process context_network_inference {
             --multiple_testing "${params.diff_net_analysis.multiple_testing}" \\
             --num_workers "${task.cpus}" \\
             --nan_value "${params.diff_net_analysis.nan_value}" \\
+            ${n_min_valid_arg} \\
             --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}_" : ""}${meta.context}_association_scores"       
     """
     

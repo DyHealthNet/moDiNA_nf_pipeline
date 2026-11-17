@@ -31,8 +31,8 @@ edge_metrics <- c("diff-L-PE", "diff-P", "diff-E", "sum-diff-PE", "sum-diff-L-PE
 edge_metrics_colors <- c("#1F78B4", "#33A02C", "#E31A1C", "#6A3D9A", "#B15928", "#FF7F00", "#636363")
 names(edge_metrics_colors) <- edge_metrics
 
-algorithms <- c('absDimontRank', 'DimontRank', 'PageRank', 'PageRank+', 'nodeRank')
-algorithm_colors <- c("#4B0082", "#9370DB", "#004225", "#228B22", "#8B0000", "#FF7F50")
+algorithms <- c('MeanEdgeRank', 'MedianEdgeRank', 'PageRank', 'PageRank+', 'nodeRank', 'MeanProductRank', 'MedianProductRank')
+algorithm_colors <- c("#4B0082", "#9370DB", "#004225", "#228B22", "#8B0000", "#FF7F50", "#FFB38A")
 names(algorithm_colors) <- algorithms
 
 # Calculate AUC, TPR, and FPR

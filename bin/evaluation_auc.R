@@ -79,7 +79,7 @@ summary_dt[node_metric == "", node_metric := "None"]
 summary_dt[edge_metric == "", edge_metric := "None"]
 
 # Level algorithms
-summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("absDimontRank", "DimontRank", "PageRank", "PageRank+", "nodeRank"))
+summary_dt$algorithm <- factor(summary_dt$algorithm, levels = c("MeanEdgeRank", "MedianEdgeRank", "PageRank", "PageRank+", "nodeRank", "MeanProductRank", "MedianProductRank"))
 
 # Group by configuration and calculate mean/sd AUC
 results <- summary_dt[, .(
