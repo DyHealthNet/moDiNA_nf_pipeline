@@ -50,8 +50,8 @@ def validateFilteringParams(filter_method, filter_param, filter_metric, filter_r
         return
     }
 
-    // Check filter_metric (raw-P or rescaled-E)
-    def valid_filter_metrics = ['raw-P', 'rescaled-E']
+    // Check filter_metric (raw-P, adj-P or rescaled-E)
+    def valid_filter_metrics = ['raw-P', 'adj-P', 'rescaled-E']
     if (filter_metric && filter_metric != '') {
         if (!valid_filter_metrics.contains(filter_metric)) {
             error "ERROR: Parameter 'diff_net_analysis.filter_metric' must be one of: ${valid_filter_metrics.join(', ')}"
@@ -437,6 +437,13 @@ workflow validate_params {
         def valid_multiple_testing = ['bh','by']
         if (!valid_multiple_testing.contains(params.diff_net_analysis.multiple_testing)) {
             error "ERROR: Parameter 'diff_net_analysis.multiple_testing' must be one of: ${valid_multiple_testing.join(', ')}"
+        }
+    }
+
+    if (params.diff_net_analysis.metric_pvalue) {
+        def valid_metric_pvalue = ['adj-P', 'raw-P']
+        if (!valid_metric_pvalue.contains(params.diff_net_analysis.metric_pvalue)) {
+            error "ERROR: Parameter 'diff_net_analysis.metric_pvalue' must be one of: ${valid_metric_pvalue.join(', ')}"
         }
     }
     

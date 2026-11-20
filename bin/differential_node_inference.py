@@ -31,6 +31,9 @@ if __name__ == '__main__':
     
     parser.add_argument('--multiple_testing', type=str, required=True,
                         help='Multiple testing correction method (e.g., bonferroni, fdr_bh, none)')
+    parser.add_argument('--metric_pvalue', type=str, default='adj-P', choices=['adj-P', 'raw-P'],
+                        help='P-value the p-value based scores use: adjusted (adj-P) or unadjusted (raw-P). '
+                             'For STC: the adjusted or unadjusted node test p-value (both are written to the output).')
     parser.add_argument('--nan_value', type=int, default=-89,
                         help='Value that represent the NA values in the input data')
     parser.add_argument('--num_workers', type=int, default=1, 
@@ -79,7 +82,8 @@ if __name__ == '__main__':
                 nan_value=args.nan_value,
                 num_workers=args.num_workers,
                 meta_file = meta.copy(),
-                test_type = args.test_type
+                test_type = args.test_type,
+                metric_pvalue = args.metric_pvalue
             )
 
         nodes_diff.to_csv(f'{args.output_prefix}_{node_metric}_node_metrics.csv', index=True)
