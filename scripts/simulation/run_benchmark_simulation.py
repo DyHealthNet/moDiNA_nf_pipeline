@@ -17,7 +17,7 @@ CSV conventions:
   * Every other row must be complete. Exception: background_model, module_size, module_fraction and
     module_correlation may be left blank (defaults: modules, none, 0.1, 0.2; a blank module_size means
     module_fraction x the number of variables), and so may pagerank_damping (default 0.85, the damping factor of
-    PageRank+ / PageRank). background_strength/background_density are only used by
+    PageRank+ / PageRank) and metric_pvalue (default adj-P; raw-P makes the metrics use unadjusted p-values). background_strength/background_density are only used by
     background_model scale_free.
   * The scale-free benchmark of the first submission is benchmark_runs_scale_free.csv (run it with --csv).
 
@@ -50,7 +50,7 @@ OPTIONAL_COLS = {'background_model': ('modules', str), 'module_size': (None, int
                  'module_correlation': (0.2, float)}
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
 # Optional differential-analysis columns: a blank cell (or a missing column) means the default
-DIFF_NET_OPTIONAL_COLS = {'pagerank_damping': (0.85, float)}
+DIFF_NET_OPTIONAL_COLS = {'pagerank_damping': (0.85, float), 'metric_pvalue': ('adj-P', str)}
 PARAM_COLS = INT_COLS + FLOAT_COLS + DIFF_NET_STR_COLS + ['out_dir']
 
 
@@ -113,7 +113,7 @@ def render_params(run, path_config):
     if path_config:
         lines.append(f'  path_config: "{path_config}"')
     lines += [f'  {c}: "{run[c]}"' for c in DIFF_NET_STR_COLS]
-    lines += [f'  {c}: {run[c]}' for c in DIFF_NET_OPTIONAL_COLS]
+    lines += [f'  {c}: "{run[c]}"' if isinstance(run[c], str) else f'  {c}: {run[c]}' for c in DIFF_NET_OPTIONAL_COLS]
     return '\n'.join(lines) + '\n'
 
 
