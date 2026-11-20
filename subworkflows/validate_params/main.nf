@@ -266,6 +266,16 @@ workflow validate_params {
         if (params.simulation.hub_reuse_prob != null && (!(params.simulation.hub_reuse_prob instanceof Number) || params.simulation.hub_reuse_prob < 0 || params.simulation.hub_reuse_prob > 1)) {
             error "ERROR: Parameter 'simulation.hub_reuse_prob' must be a number between 0 and 1 (inclusive)"
         }
+        ['n_hub_cont', 'n_hub_bi', 'n_hub_cat'].each { name ->
+            def value = params.simulation[name]
+            if (value != null && (!(value instanceof Integer) || value < 0)) {
+                error "ERROR: Parameter 'simulation.${name}' must be a non-negative integer"
+            }
+        }
+        def hub_scale = params.simulation.hub_loading_scale
+        if (hub_scale != null && (!(hub_scale instanceof Number) || hub_scale < 0 || hub_scale >= 1)) {
+            error "ERROR: Parameter 'simulation.hub_loading_scale' must be a number in [0, 1)"
+        }
 
         // Scale-free background structure, always on.
         if (params.simulation.background_topology != null) {
