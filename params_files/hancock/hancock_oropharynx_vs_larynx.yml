@@ -9,7 +9,6 @@ run_type: "file"            # run the configurations listed in diff_net_analysis
 data_type: "real"
 out_dir: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/"
 work_dir: "./work"
-evaluation: false           # no ground truth for real data
 
 real_world_data:
   path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/hancock/hancock_processed_data/oropharynx_vs_larynx_json/primary_tumor_site_4.csv"

@@ -10,7 +10,6 @@ run_type: "file"            # run the configurations listed in diff_net_analysis
 data_type: "real"
 out_dir: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_recoded/"
 work_dir: "./work"
-evaluation: false           # no ground truth for real data
 
 real_world_data:
   path_context_1: "/nfs/data/DyHealthNet/moDiNA_data/tcga_luad/processed_luad/sex_clin_prot_recoded/sex_0.csv"

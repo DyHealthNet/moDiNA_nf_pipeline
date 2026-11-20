@@ -9,14 +9,8 @@ include {differential_node_inference} from './modules/differential_node_inferenc
 include {differential_edge_inference} from './modules/differential_edge_inference/main.nf'
 include {rescaling_networks} from './modules/rescaling_networks/main.nf'
 include {node_ranking} from './modules/node_ranking/main.nf'
-include {evaluation_auc} from './modules/evaluation_auc/main.nf'
-include {evaluation_association_scores} from './modules/evaluation_association_scores/main.nf'
-include {evaluation_differential_scores} from './modules/evaluation_differential_scores/main.nf'
 include {create_summary_file} from './modules/create_summary_file/main.nf'
 include {snapshot_parameters} from './subworkflows/snapshot_parameters/main.nf'
-include {evaluation_roc_recall_enrichment} from './modules/evaluation_roc_recall_enrichment/main.nf'
-include {evaluation_ranking_similarity} from './modules/evaluation_ranking_similarity/main.nf'
-include {evaluation_mean_shifts} from './modules/evaluation_mean_shifts/main.nf'
 
 // Output file prefix of a simulation ('' for real-world data), as used by the inference and ranking scripts
 def outputPrefix(id) { params.data_type == 'simulation' ? "sim${id}".toString() : '' }
@@ -272,19 +266,6 @@ workflow {
     // COLLECT THE CHANNEL INTO A LIST
     summary_data_collected = summary_data.collect()
     create_summary_file(summary_data_collected)
-
-    // Evaluation
-    if(params.evaluation){
-   	evaluation_association_scores(create_summary_file.out.summary_csv)
-    	evaluation_differential_scores(create_summary_file.out.summary_csv)
-    	evaluation_ranking_similarity(create_summary_file.out.summary_csv)
-    	evaluation_mean_shifts(create_summary_file.out.summary_csv)
-
-    	if (params.data_type == 'simulation') {
-        	evaluation_auc(create_summary_file.out.summary_csv)
-        	evaluation_roc_recall_enrichment(create_summary_file.out.summary_csv)
-    	}
-    }
 
     snapshot_parameters()
     

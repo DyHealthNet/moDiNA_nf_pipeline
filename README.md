@@ -33,7 +33,6 @@ To specify the configurations, you can either change the parameters in the nextf
 | data_type | string | simulation | Source of input data. Either simulation (generate synthetic data via copula) or real (provide real-world data files). |
 | out_dir | path | '' | Absolute path to the directory where all pipeline outputs are written. |
 | work_dir | path | '' | Absolute path to the work directory of the Nextflow pipeline. |
-| out_dir | boolean | true | Boolean specifying whether evaluation plots should be generated. |
 
 
 ### Environment Parameters
@@ -41,7 +40,6 @@ To specify the configurations, you can either change the parameters in the nextf
 | Parameter | Type | Description |
 |---|---|---|
 | conda_modina_env | path | Absolute path to the conda environment used for all core moDiNA processes (network inference, ranking, …). |
-| conda_eval_env | path | Absolute path to the conda environment used for R-based evaluation process. |
 
 ### Simulation Parameters (simulation.*)
 
@@ -143,9 +141,9 @@ nextflow run main.nf -profile conda,slurm -params-file path/to/your/params.yml
 
 ## Pipeline Output
 
-The results are stored in the specified output directory, which is organized by differential network analysis steps and evaluation steps.
+The results are stored in the specified output directory, which is organized by differential network analysis steps.
 
-The main output of the pipeline includes: - Simulated datasets for each simulation replicate (if data_type = 'simulation'). - Inferred context-specific networks for each context and simulation. - Node and edge metrics files for each configuration and simulation. - Ranking results for each configuration and simulation. - Evaluation results
+The main output of the pipeline includes: - Simulated datasets for each simulation replicate (if data_type = 'simulation'). - Inferred context-specific networks for each context and simulation. - Node and edge metrics files for each configuration and simulation. - Ranking results for each configuration and simulation. - summary.csv listing every configuration with its ranking, metric and ground-truth files.
 
 # Citation
 
