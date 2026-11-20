@@ -24,16 +24,20 @@ if __name__ == '__main__':
                         help='Comma-separated edge-level metrics to compute (e.g., diff-LP,diff-LPxRE); an empty string writes empty placeholder files')
 
 
+    parser.add_argument('--metric_pvalue', type=str, default='adj-P', choices=['adj-P', 'raw-P'],
+                        help='P-value the p-value based scores (P, LP, LPxRE, LPxVE, Z) use: adjusted (adj-P) or '
+                             'unadjusted (raw-P). Both are kept in the output either way.')
+
     # Output
     parser.add_argument('--output_prefix', type=str, required=True,
                         help='Prefix for output files')
 
-    # Context names (used to label the per-context raw-P/raw-E columns). Default: derived from
+    # Context names (used to label the per-context raw-P/adj-P/raw-E columns). Default: derived from
     # the network filenames (e.g. "Male_rescaled_association_scores.csv" -> "Male").
     parser.add_argument('--name_context_1', type=str, required=False, default=None,
-                        help='Name of context 1 (labels its raw-P/raw-E columns)')
+                        help='Name of context 1 (labels its raw-P/adj-P/raw-E columns)')
     parser.add_argument('--name_context_2', type=str, required=False, default=None,
-                        help='Name of context 2 (labels its raw-P/raw-E columns)')
+                        help='Name of context 2 (labels its raw-P/adj-P/raw-E columns)')
 
     args = parser.parse_args()
 
@@ -69,7 +73,8 @@ if __name__ == '__main__':
                 scores2=scores2.copy(),
                 edge_metric=edge_metric,
                 name1=name_context_1,
-                name2=name_context_2
+                name2=name_context_2,
+                metric_pvalue=args.metric_pvalue
             )
 
         edges_diff.to_csv(f'{args.output_prefix}_{edge_metric}_edge_metrics.csv', index=True)

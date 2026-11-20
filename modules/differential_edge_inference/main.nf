@@ -18,6 +18,7 @@ process differential_edge_inference {
             --network_context_1 "${network_context_1}" \
             --network_context_2 "${network_context_2}" \
             --edge_metrics "${meta.edge_metrics.join(',')}" \
+            --metric_pvalue "${params.diff_net_analysis.metric_pvalue ?: 'adj-P'}" \
             --output_prefix "${params.data_type == 'simulation' ? "sim${meta.id}" : ""}"
     """
     

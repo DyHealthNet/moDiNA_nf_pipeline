@@ -112,12 +112,13 @@ Only required when `data_type = 'real'`.
 | `diff_net_analysis.filter_target` | `string` | `''` | Which network to filter. Leave empty to skip filtering. `context-specific` filters the two context networks before differential analysis (using `filter_metric` and `filter_rule`); `differential` filters the differential network on the computed `edge_metric` (`filter_metric` and `filter_rule` are ignored). When set, `filter_method` is required. |
 | `diff_net_analysis.filter_method` | `string` | `''` | Method to filter edges. One of: `degree`, `density`, `quantile`. Required when `filter_target` is set. |
 | `diff_net_analysis.filter_param` | `integer / float` | `2` | Parameter for the chosen filter method. Integer for `degree`; float in (0, 1) for `density` and `quantile`. |
-| `diff_net_analysis.filter_metric` | `string` | `'raw-P'` | Edge score used as the basis for filtering. One of: `raw-P`, `rescaled-E`. Required when `filter_method` is set and `filter_target` is `context-specific`. |
+| `diff_net_analysis.filter_metric` | `string` | `'raw-P'` | Edge score used as the basis for filtering. One of: `raw-P` (unadjusted p-value), `adj-P` (adjusted p-value), `rescaled-E`. Required when `filter_method` is set and `filter_target` is `context-specific`. |
 | `diff_net_analysis.filter_rule` | `string` | `'zero'` | Rule applied when filtering edges. One of: `zero` (set filtered edges to zero), `union` (keep edges present in at least one context). Required when `filter_method` is set and `filter_target` is `context-specific`. |
 | `diff_net_analysis.test_type` | `string` | `'nonparametric'` | Type of statistical test used during context network inference. One of: `parametric`, `nonparametric`. |
 | `diff_net_analysis.nan_value` | `integer` | `-89` | Sentinel value in input data that represents missing / NA values. |
 | `diff_net_analysis.n_min_valid` | `integer` | `10` | Minimum number of samples (after pairwise removal of missing values) a pairwise association test must be based on. Edges below this in either context are removed from both. |
-| `diff_net_analysis.multiple_testing` | `string` | `'bh'` | Multiple testing correction method applied to association p-values. One of: `bh` (Benjamini–Hochberg), `by` (Benjamini–Yekutieli). |
+| `diff_net_analysis.multiple_testing` | `string` | `'bh'` | Multiple testing correction method applied to association p-values. One of: `bh` (Benjamini–Hochberg), `by` (Benjamini–Yekutieli). The unadjusted p-value is stored as `raw-P`, the adjusted one as `adj-P`. |
+| `diff_net_analysis.metric_pvalue` | `string` | `'adj-P'` | P-value the p-value based edge and node scores (P, LP, LPxRE, LPxVE, diff-Z) are computed from. One of: `adj-P` (adjusted), `raw-P` (unadjusted). Both stay in the score and edge files. For STC it selects the adjusted or unadjusted node test p-value; both are kept in the node metric files. |
 
 
 ## Usage 
