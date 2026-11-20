@@ -343,6 +343,11 @@ workflow validate_params {
 
     // Validate differential network analysis parameters
 
+    def damping = params.diff_net_analysis.pagerank_damping
+    if (damping == null || damping instanceof Boolean || !(damping instanceof Number) || damping < 0 || damping >= 1) {
+        error "ERROR: Parameter 'diff_net_analysis.pagerank_damping' must be a number in [0, 1)"
+    }
+
     def configs
 
     if (params.run_type == 'single'){

@@ -25,6 +25,7 @@ diff_net_analysis:
   node_metric: ""
   edge_metric: ""
   ranking_algorithm: ""
+  pagerank_damping: 0.85
   # Context network inference
   test_type: "nonparametric"  # tests for continuous variables; the benchmark used "parametric"
   multiple_testing: "bh"      # Benjamini-Hochberg

@@ -15,6 +15,7 @@ diff_net_analysis:
   edge_metric: ""
   node_metric: ""
   ranking_algorithm: ""
+  pagerank_damping: 0.85
   filter_target: ""
   filter_method: ""
   filter_param: 0

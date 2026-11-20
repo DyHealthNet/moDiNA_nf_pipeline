@@ -45,3 +45,4 @@ simulation:
 diff_net_analysis:
   test_type: "parametric"
   multiple_testing: "bh"
+  pagerank_damping: 0.85
