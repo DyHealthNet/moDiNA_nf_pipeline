@@ -17,13 +17,17 @@ process node_ranking {
     // Metric names and file names contain neither commas nor single quotes
     def config_lines = ['node_metric,edge_metric,node_file,edge_file,stats_file,output_prefix'] +
         configs.collect { c -> [c.node_metric, c.edge_metric, c.node_file, c.edge_file, c.stats_file, c.output_prefix].join(',') }
+    // The damping factor only reaches the PageRank algorithms, so the jobs of all other algorithms (and their -resume
+    // cache) do not depend on it
+    def damping_arg = ['PageRank+', 'PageRank'].contains(meta.algorithm) ?
+        " \\\n            --pagerank_damping ${params.diff_net_analysis.pagerank_damping}" : ''
     """
         printf '%s\\n' ${config_lines.collect { "'${it}'" }.join(' ')} > configs.csv
 
         node_ranking.py \\
             --config_file configs.csv \\
             --meta_file "${meta_file}" \\
-            --ranking_algorithm "${meta.algorithm}"
+            --ranking_algorithm "${meta.algorithm}"${damping_arg}
     """
     
 }

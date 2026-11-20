@@ -15,6 +15,7 @@ diff_net_analysis:
   edge_metric: "pre-P"
   node_metric: "STC"
   ranking_algorithm: "direct_node"
+  pagerank_damping: 0.85
   filter_method: ""
   filter_param: 0
   filter_metric: "pre-P"

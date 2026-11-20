@@ -16,7 +16,8 @@ CSV conventions:
     the baseline (e.g. n_500 on the sample-size axis). It is skipped: the baseline run is that level.
   * Every other row must be complete. Exception: background_model, module_size, module_fraction and
     module_correlation may be left blank (defaults: modules, none, 0.1, 0.2; a blank module_size means
-    module_fraction x the number of variables). background_strength/background_density are only used by
+    module_fraction x the number of variables), and so may pagerank_damping (default 0.85, the damping factor of
+    PageRank+ / PageRank). background_strength/background_density are only used by
     background_model scale_free.
   * The scale-free benchmark of the first submission is benchmark_runs_scale_free.csv (run it with --csv).
 
@@ -48,6 +49,8 @@ SIMULATION_COLS = INT_COLS + FLOAT_COLS
 OPTIONAL_COLS = {'background_model': ('modules', str), 'module_size': (None, int), 'module_fraction': (0.1, float),
                  'module_correlation': (0.2, float)}
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
+# Optional differential-analysis columns: a blank cell (or a missing column) means the default
+DIFF_NET_OPTIONAL_COLS = {'pagerank_damping': (0.85, float)}
 PARAM_COLS = INT_COLS + FLOAT_COLS + DIFF_NET_STR_COLS + ['out_dir']
 
 
@@ -77,7 +80,8 @@ def read_runs(path):
             try:
                 run.update({c: int(row[c]) for c in INT_COLS})
                 run.update({c: float(row[c]) for c in FLOAT_COLS})
-                run.update({c: cast(row[c]) if row.get(c) else default for c, (default, cast) in OPTIONAL_COLS.items()})
+                run.update({c: cast(row[c]) if row.get(c) else default
+                            for c, (default, cast) in {**OPTIONAL_COLS, **DIFF_NET_OPTIONAL_COLS}.items()})
             except ValueError as e:
                 raise SystemExit(f'{path}:{line_no}: {row["name"]!r}: {e}')
             run.update({c: row[c] for c in DIFF_NET_STR_COLS + ['out_dir']})
@@ -109,6 +113,7 @@ def render_params(run, path_config):
     if path_config:
         lines.append(f'  path_config: "{path_config}"')
     lines += [f'  {c}: "{run[c]}"' for c in DIFF_NET_STR_COLS]
+    lines += [f'  {c}: {run[c]}' for c in DIFF_NET_OPTIONAL_COLS]
     return '\n'.join(lines) + '\n'
 
 

@@ -39,6 +39,8 @@ if __name__ == '__main__':
     parser.add_argument('--ranking_algorithm', type=str, required=True,
                         choices=list(modina.RANKING_ALGORITHMS),
                         help='Ranking algorithm to compute')
+    parser.add_argument('--pagerank_damping', type=float, default=0.85,
+                        help="Damping factor (alpha) of 'PageRank+' and 'PageRank', in [0, 1); ignored by the other algorithms")
 
     args = parser.parse_args()
 
@@ -55,7 +57,8 @@ if __name__ == '__main__':
             edges_diff=load_metric_file(config.edge_file, cache),
             ranking_alg=args.ranking_algorithm,
             meta_file=meta_df.copy(),
-            edge_node_stats=load_metric_file(config.stats_file, cache)
+            edge_node_stats=load_metric_file(config.stats_file, cache),
+            pagerank_damping=args.pagerank_damping
         )
 
         ranks.to_csv(f'{config.output_prefix}_ranking.csv', index=False)
