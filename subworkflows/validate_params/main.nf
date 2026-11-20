@@ -83,7 +83,7 @@ def separateEdgeMetrics() { ['diff-Z'] }
 def edgeMetrics() {
     scoreTypes().collect { score -> "diff-${score}".toString() } + ['sum-LP-VE', 'sum-LP-RE'] + separateEdgeMetrics()
 }
-def rankingAlgorithms() { ['PageRank+', 'PageRank', 'MeanEdgeRank', 'MedianEdgeRank', 'nodeRank', 'MeanProductRank', 'MedianProductRank'] }
+def rankingAlgorithms() { ['PageRank+', 'PageRank', 'MeanEdgeRank', 'MedianEdgeRank', 'MaxEdgeRank', 'nodeRank', 'MeanProductRank', 'MedianProductRank', 'MaxProductRank'] }
 
 // Family of a node/edge metric (STC, WDC, PRC, diff, sum, or the metric itself for separateEdgeMetrics); the empty
 // placeholder metric '' is 'none'. Differential inference runs one job per family and simulation.
@@ -150,8 +150,8 @@ def removeInvalidConfigurations(configs, warn = true){
         node_metric = config[0]
         edge_metric = config[1]
         ranking_algo = config[2]
-        // Check whether MeanEdgeRank, MedianEdgeRank, PageRank is used with any node_metric -> just give warning
-        if (['MeanEdgeRank', 'MedianEdgeRank', 'PageRank'].contains(ranking_algo)) {
+        // Check whether MeanEdgeRank, MedianEdgeRank, MaxEdgeRank, PageRank is used with any node_metric -> just give warning
+        if (['MeanEdgeRank', 'MedianEdgeRank', 'MaxEdgeRank', 'PageRank'].contains(ranking_algo)) {
             if (node_metric != '') {
                 if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' does not use node_metric and will ignore the provided node_metric '${node_metric}'."
                 config[0] = ''
@@ -166,9 +166,9 @@ def removeInvalidConfigurations(configs, warn = true){
             }
         }
 
-        // Check whether for configs with algorithm PageRank+, MeanProductRank or MedianProductRank the node and edge
+        // Check whether for configs with algorithm PageRank+, MeanProductRank, MedianProductRank or MaxProductRank the node and edge
         // metrics are given and use the same effect-size rescaling (RE or VE; P- and LP-based metrics combine with either)
-        if (['PageRank+', 'MeanProductRank', 'MedianProductRank'].contains(ranking_algo)) {
+        if (['PageRank+', 'MeanProductRank', 'MedianProductRank', 'MaxProductRank'].contains(ranking_algo)) {
             if (node_metric == '' || edge_metric == '') {
                 if (warn) log.warn "WARNING: Configuration with ranking_algorithm '${ranking_algo}' requires both node_metric and edge_metric to be provided. This configuration will be skipped."
                 continue
