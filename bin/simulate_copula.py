@@ -84,13 +84,20 @@ if __name__ == '__main__':
                         help='Fraction of each pair type\'s correlation/both pairs that reuse an '
                              'already-placed node as a hub instead of drawing two fresh nodes, spread '
                              'evenly across node types (0.0 = one edge per node, the default)')
-    # Hub rewiring: in one random context the hub's whole background correlation row is scaled by
-    # hub_loading_scale (module background: its module loading shrinks), so all its associations change at once.
-    parser.add_argument('--n_hub_cont', type=int, default=0, help='Number of continuous rewired hub nodes')
-    parser.add_argument('--n_hub_bi', type=int, default=0, help='Number of binary rewired hub nodes')
-    parser.add_argument('--n_hub_cat', type=int, default=0, help='Number of categorical rewired hub nodes')
-    parser.add_argument('--hub_loading_scale', type=float, default=0.5,
-                        help='Factor in [0, 1) applied to a rewired hub\'s background correlations in one context '
+    # Planted hubs: a node with k differential edges (k from [hub_degree_low, hub_degree_high]) to random
+    # partners, all changed in one context, each like a planted pair.
+    parser.add_argument('--n_hub_cont', type=int, default=0, help='Number of continuous planted hubs')
+    parser.add_argument('--n_hub_bi', type=int, default=0, help='Number of binary planted hubs')
+    parser.add_argument('--n_hub_cat', type=int, default=0, help='Number of categorical planted hubs')
+    parser.add_argument('--hub_degree_low', type=int, default=3, help='Smallest number of edges of a planted hub')
+    parser.add_argument('--hub_degree_high', type=int, default=8, help='Largest number of edges of a planted hub')
+    # Module hubs: in one random context the hub's whole background correlation row is scaled by
+    # module_hub_scale (module background: its module loading shrinks), so all its associations change at once.
+    parser.add_argument('--n_module_hub_cont', type=int, default=0, help='Number of continuous module hubs')
+    parser.add_argument('--n_module_hub_bi', type=int, default=0, help='Number of binary module hubs')
+    parser.add_argument('--n_module_hub_cat', type=int, default=0, help='Number of categorical module hubs')
+    parser.add_argument('--module_hub_scale', type=float, default=0.5,
+                        help='Factor in [0, 1) applied to a module hub\'s background correlations in one context '
                              '(0 = the hub leaves its module)')
 
     # Shared background correlation structure (correlated modules by default, or scale-free). Built once
@@ -164,7 +171,12 @@ if __name__ == '__main__':
                            n_hub_cont = args.n_hub_cont,
                            n_hub_bi = args.n_hub_bi,
                            n_hub_cat = args.n_hub_cat,
-                           hub_loading_scale = args.hub_loading_scale,
+                           hub_degree_low = args.hub_degree_low,
+                           hub_degree_high = args.hub_degree_high,
+                           n_module_hub_cont = args.n_module_hub_cont,
+                           n_module_hub_bi = args.n_module_hub_bi,
+                           n_module_hub_cat = args.n_module_hub_cat,
+                           module_hub_scale = args.module_hub_scale,
                            background_strength = args.background_strength,
                            background_density = args.background_density,
                            background_seed = args.background_seed,
@@ -175,7 +187,8 @@ if __name__ == '__main__':
 
     # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
-    gt_nodes = set(shift_nodes) | set(effects['hub_nodes'])
+    gt_nodes = set(shift_nodes) | set(effects['hub_nodes']) | set(effects['module_hub_nodes'])
+    gt_nodes.update(p for partners in effects['hub_partners'].values() for p in partners)
     for pair in corr_nodes + shift_corr_nodes:
         gt_nodes.update(pair)
     node_stats = {node: (effects['node_degree'].get(node, 0), effects['node_sum_magnitude'].get(node, 0.0))
@@ -187,6 +200,6 @@ if __name__ == '__main__':
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
     # `node_shift_magnitude` adds the per-node drawn shift as a further named column. Ranged draws
     # make this necessary: without it the realized shift of a node is unrecoverable from the output.
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'], hub_nodes=effects['hub_nodes'])
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'], hub_edge_magnitude=effects['hub_edge_magnitude'])
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'], hub_partners=effects['hub_partners'], module_hub_nodes=effects['module_hub_nodes'])
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'], hub_edge_magnitude=effects['hub_edge_magnitude'], module_hub_edge_magnitude=effects['module_hub_edge_magnitude'])
     

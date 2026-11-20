@@ -18,7 +18,9 @@ ground_truth_palette <- c(
   "diff. corr."                = "#fdbf6f",
   "mean shift"                  = "#C195C4",
   "mean shift + diff. corr."    = "#b2df8a",
-  "hub rewiring"                = "#1f78b4",
+  "hub"                         = "#1f78b4",
+  "hub partner"                 = "#a6cee3",
+  "module hub"                  = "#33a02c",
   "non-ground truth"            = "lightgray"
 )
 

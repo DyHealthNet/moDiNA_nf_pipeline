@@ -56,7 +56,12 @@ process simulate_copula {
             --n_hub_cont ${params.simulation.n_hub_cont ?: 0} \
             --n_hub_bi ${params.simulation.n_hub_bi ?: 0} \
             --n_hub_cat ${params.simulation.n_hub_cat ?: 0} \
-            --hub_loading_scale ${params.simulation.hub_loading_scale != null ? params.simulation.hub_loading_scale : 0.5} \
+            --hub_degree_low ${params.simulation.hub_degree_low ?: 3} \
+            --hub_degree_high ${params.simulation.hub_degree_high ?: 8} \
+            --n_module_hub_cont ${params.simulation.n_module_hub_cont ?: 0} \
+            --n_module_hub_bi ${params.simulation.n_module_hub_bi ?: 0} \
+            --n_module_hub_cat ${params.simulation.n_module_hub_cat ?: 0} \
+            --module_hub_scale ${params.simulation.module_hub_scale != null ? params.simulation.module_hub_scale : 0.5} \
             --background_strength ${params.simulation.background_strength ?: 0.2} \
             --background_density ${params.simulation.background_density ?: 2} \
             ${params.simulation.background_seed != null ? "--background_seed ${params.simulation.background_seed + meta.id}" : ''} \
