@@ -14,8 +14,9 @@ CSV conventions:
     below it.
   * A row whose parameter columns are all empty is a placeholder for a level that is identical to
     the baseline (e.g. n_500 on the sample-size axis). It is skipped: the baseline run is that level.
-  * Every other row must be complete. Exception: background_model, module_size, module_fraction and
-    module_correlation may be left blank (defaults: modules, none, 0.1, 0.2; a blank module_size means
+  * Every other row must be complete. Exception: background_model, module_size, module_fraction,
+    module_correlation, n_hub_cont/n_hub_bi/n_hub_cat and hub_loading_scale may be left blank (defaults:
+    modules, none, 0.1, 0.2, 0 hubs, 0.5; a blank module_size means
     module_fraction x the number of variables), and so may pagerank_damping (default 0.85, the damping factor of
     PageRank+ / PageRank) and metric_pvalue (default adj-P; raw-P makes the metrics use unadjusted p-values). background_strength/background_density are only used by
     background_model scale_free.
@@ -47,7 +48,8 @@ SIMULATION_COLS = INT_COLS + FLOAT_COLS
 # Background model columns: optional, a blank cell (or a missing column) means the default, the module background
 # (benchmark_runs_scale_free.csv names scale_free explicitly). module_size None = module_fraction x n_vars.
 OPTIONAL_COLS = {'background_model': ('modules', str), 'module_size': (None, int), 'module_fraction': (0.1, float),
-                 'module_correlation': (0.2, float)}
+                 'module_correlation': (0.2, float),
+                 'n_hub_cont': (0, int), 'n_hub_bi': (0, int), 'n_hub_cat': (0, int), 'hub_loading_scale': (0.5, float)}
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
 # Optional differential-analysis columns: a blank cell (or a missing column) means the default
 DIFF_NET_OPTIONAL_COLS = {'pagerank_damping': (0.85, float), 'metric_pvalue': ('adj-P', str)}

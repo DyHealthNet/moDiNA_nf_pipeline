@@ -84,6 +84,14 @@ if __name__ == '__main__':
                         help='Fraction of each pair type\'s correlation/both pairs that reuse an '
                              'already-placed node as a hub instead of drawing two fresh nodes, spread '
                              'evenly across node types (0.0 = one edge per node, the default)')
+    # Hub rewiring: in one random context the hub's whole background correlation row is scaled by
+    # hub_loading_scale (module background: its module loading shrinks), so all its associations change at once.
+    parser.add_argument('--n_hub_cont', type=int, default=0, help='Number of continuous rewired hub nodes')
+    parser.add_argument('--n_hub_bi', type=int, default=0, help='Number of binary rewired hub nodes')
+    parser.add_argument('--n_hub_cat', type=int, default=0, help='Number of categorical rewired hub nodes')
+    parser.add_argument('--hub_loading_scale', type=float, default=0.5,
+                        help='Factor in [0, 1) applied to a rewired hub\'s background correlations in one context '
+                             '(0 = the hub leaves its module)')
 
     # Shared background correlation structure (correlated modules by default, or scale-free). Built once
     # and copied to both contexts, so every
@@ -153,6 +161,10 @@ if __name__ == '__main__':
                            shift_low = args.shift_low,
                            shift_high = args.shift_high,
                            hub_reuse_prob = args.hub_reuse_prob,
+                           n_hub_cont = args.n_hub_cont,
+                           n_hub_bi = args.n_hub_bi,
+                           n_hub_cat = args.n_hub_cat,
+                           hub_loading_scale = args.hub_loading_scale,
                            background_strength = args.background_strength,
                            background_density = args.background_density,
                            background_seed = args.background_seed,
@@ -163,7 +175,7 @@ if __name__ == '__main__':
 
     # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
-    gt_nodes = set(shift_nodes)
+    gt_nodes = set(shift_nodes) | set(effects['hub_nodes'])
     for pair in corr_nodes + shift_corr_nodes:
         gt_nodes.update(pair)
     node_stats = {node: (effects['node_degree'].get(node, 0), effects['node_sum_magnitude'].get(node, 0.0))
@@ -175,6 +187,6 @@ if __name__ == '__main__':
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
     # `node_shift_magnitude` adds the per-node drawn shift as a further named column. Ranged draws
     # make this necessary: without it the realized shift of a node is unrecoverable from the output.
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'])
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'])
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'], hub_nodes=effects['hub_nodes'])
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'], hub_edge_magnitude=effects['hub_edge_magnitude'])
     
