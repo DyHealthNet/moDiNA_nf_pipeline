@@ -165,9 +165,12 @@ def run_pipeline(params_file, nextflow, profile, resume, dry_run):
     cmd = [nextflow, 'run', 'main.nf', '-profile', profile, '-params-file', params_file]
     if resume:
         session = last_session(params_file)
-        cmd += ['-resume'] + ([session] if session else [])
-        if not session:
-            print('  no earlier session of this params file in .nextflow/history: -resume without session ID',
+        if session:
+            cmd += ['-resume', session]
+        else:
+            # A bare -resume would resume the most recent session of the pipeline directory, i.e. another run (and
+            # fail on its lock while that run is still going), so a run without a session of its own starts fresh.
+            print('  no earlier session of this params file in .nextflow/history: starting without -resume',
                   flush=True)
     print('  $ ' + ' '.join(cmd), flush=True)
     if dry_run:
