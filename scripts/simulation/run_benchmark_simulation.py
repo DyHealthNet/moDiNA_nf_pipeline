@@ -23,8 +23,12 @@ CSV conventions:
     background_model scale_free.
   * The scale-free benchmark of the first submission is benchmark_runs_scale_free.csv (run it with --csv).
 
-Run with: python3 run_benchmark_simulation.py [--only NAME_OR_CATEGORY ...] [--dry-run]
-          [--resume] [--profile conda,slurm] [--path-config configs.csv] [--nextflow PATH]
+Run with: python3 run_benchmark_simulation.py [--csv SHEET] [--params-dir DIR] [--only NAME_OR_CATEGORY ...]
+          [--dry-run] [--resume] [--profile conda,slurm] [--path-config configs.csv] [--nextflow PATH]
+
+benchmark_runs_hubs.csv (main baseline with single-edge pairs and one module hub per type, every axis, each
+once with adj-P and once with raw-P metrics) writes to its own folder:
+    python3 run_benchmark_simulation.py --csv benchmark_runs_hubs.csv --params-dir ../../params_files/simulation_hubs
 """
 
 import argparse
@@ -123,8 +127,8 @@ def render_params(run, path_config):
     return '\n'.join(lines) + '\n'
 
 
-def write_params(run, path_config):
-    path = os.path.join(PARAMS_ROOT, run['category'], f'{run["name"]}.yml')
+def write_params(run, path_config, params_root=PARAMS_ROOT):
+    path = os.path.join(params_root, run['category'], f'{run["name"]}.yml')
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
         f.write(render_params(run, path_config))
@@ -184,7 +188,11 @@ def main():
     ap.add_argument('--path-config', default=None,
                     help='samplesheet of moDiNA configurations; sets run_type "file" (default: run_type "all")')
     ap.add_argument('--nextflow', default='nextflow', help='Nextflow executable (default: nextflow on PATH)')
+    ap.add_argument('--params-dir', default=PARAMS_ROOT,
+                    help='folder the params files are written to, as <category>/<name>.yml '
+                         '(default: params_files/simulation); use one folder per run sheet')
     args = ap.parse_args()
+    params_root = os.path.abspath(args.params_dir)
 
     path_config = os.path.abspath(args.path_config) if args.path_config else None
     if path_config and not os.path.exists(path_config):
@@ -205,7 +213,7 @@ def main():
     failed = []
     for i, run in enumerate(runs, start=1):
         label = f'{run["category"]}/{run["name"]}'
-        params_file = write_params(run, path_config)
+        params_file = write_params(run, path_config, params_root)
         print(f'[{i}/{len(runs)}] {label}  ->  {os.path.relpath(params_file, PIPELINE_DIR)}', flush=True)
         start = time.time()
         code = run_pipeline(params_file, args.nextflow, args.profile, args.resume, args.dry_run)
