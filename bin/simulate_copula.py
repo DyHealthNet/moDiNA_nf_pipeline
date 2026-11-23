@@ -189,6 +189,7 @@ if __name__ == '__main__':
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.
     gt_nodes = set(shift_nodes) | set(effects['hub_nodes']) | set(effects['module_hub_nodes'])
     gt_nodes.update(p for partners in effects['hub_partners'].values() for p in partners)
+    gt_nodes.update(p for partners in effects['module_hub_partners'].values() for p in partners)
     for pair in corr_nodes + shift_corr_nodes:
         gt_nodes.update(pair)
     node_stats = {node: (effects['node_degree'].get(node, 0), effects['node_sum_magnitude'].get(node, 0.0))
@@ -200,6 +201,6 @@ if __name__ == '__main__':
     meta.to_csv(f'meta_{args.output_suffix}.csv', index=False)
     # `node_shift_magnitude` adds the per-node drawn shift as a further named column. Ranged draws
     # make this necessary: without it the realized shift of a node is unrecoverable from the output.
-    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'], hub_partners=effects['hub_partners'], module_hub_nodes=effects['module_hub_nodes'])
+    modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_nodes_{args.output_suffix}.txt', mode = 'node', node_stats=node_stats, node_shift_magnitude=effects['node_shift_magnitude'], hub_partners=effects['hub_partners'], module_hub_nodes=effects['module_hub_nodes'], module_hub_partners=effects['module_hub_partners'])
     modina.save_gt((shift_nodes, corr_nodes, shift_corr_nodes), f'ground_truth_simulated_edges_{args.output_suffix}.txt', mode = 'edge', edge_magnitude=effects['edge_magnitude'], hub_edge_magnitude=effects['hub_edge_magnitude'], module_hub_edge_magnitude=effects['module_hub_edge_magnitude'])
     
