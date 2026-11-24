@@ -1,0 +1,6 @@
+node_metric,edge_metric,ranking_algorithm
+STC-LPxVE,diff-Z,MaxMinRank
+STC-P,diff-Z,MaxMinRank
+STC-LP,diff-Z,MaxMinRank
+STC-VE,diff-Z,MaxMinRank
+STC-P,diff-Z,MaxProductRank
