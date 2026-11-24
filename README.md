@@ -139,6 +139,12 @@ If you have stored the parameters in a params.yml file instead of the nextflow.c
 nextflow run main.nf -profile conda,slurm -params-file path/to/your/params.yml
 ```
 
+On the statgen server (CHRIS data), add the `statgen` profile. It sets the SLURM queue (`computational`), 64 GB of memory per process and the conda environment path on that machine:
+
+```bash
+nextflow run main.nf -profile conda,slurm,statgen -params-file params_files/chris/paper_sex_split.yml
+```
+
 ## Pipeline Output
 
 The results are stored in the specified output directory, which is organized by differential network analysis steps.
