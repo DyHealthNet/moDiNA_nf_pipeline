@@ -4,23 +4,29 @@ run_type: "file"
 data_type: "real"
 out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/out/"
 work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_HCU_split/work/"
+evaluation: false
 
 real_world_data:
-  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/hcu_data.csv"
-  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/no_hcu_data.csv"
-  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_HCU_split/meta_hcu.csv"
+  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_HCU_split/hcu_data.csv"
+  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_HCU_split/no_hcu_data.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_HCU_split/meta_modina.csv"
 
 diff_net_analysis:
-  path_config: "input_samplesheet.csv"
-  edge_metric: ""
+  # Configurations to run: the ten best configurations of the simulation benchmark
+  path_config: "top_10_configs_on_sim_samplesheet.csv"
+  # Not used: only read when run_type is "single"
   node_metric: ""
+  edge_metric: ""
   ranking_algorithm: ""
   pagerank_damping: 0.85
+  # Context network inference
+  test_type: "nonparametric"  # tests for continuous variables; the benchmark used "parametric"
+  multiple_testing: "bh"      # Benjamini-Hochberg
+  nan_value: -89              # missing-value code of the HANCOCK data
+  n_min_valid: 10             # minimum complete samples per pairwise test
+  # Edge filtering: disabled (filter_target empty); the other filter parameters are then not used
   filter_target: ""
   filter_method: ""
-  filter_param: 0
+  filter_param: ""
   filter_metric: ""
   filter_rule: ""
-  test_type: "nonparametric"
-  nan_value: -89
-  multiple_testing: "bh"
