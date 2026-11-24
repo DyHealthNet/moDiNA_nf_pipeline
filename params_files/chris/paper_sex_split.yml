@@ -1,25 +1,31 @@
 name_context_1: "Male"
 name_context_2: "Female"
-run_type: "single"
+run_type: "file"
 data_type: "real"
 out_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/out/"
 work_dir: "/home/larend/DyHealthNet/modina/data/chris/paper_sex_split/work/"
+evaluation: false
 
 real_world_data:
-  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/male_data.csv"
-  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/female_data.csv"
-  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579/processed_chris_baseline/paper_sex_split/meta_modina.csv"
+  path_context_1: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_sex_split/male_data.csv"
+  path_context_2: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_sex_split/female_data.csv"
+  path_meta: "/shared/statgen/DyHealthNet/exploratory_request_579_final/processed_chris_baseline/paper_sex_split/meta_modina.csv"
 
 diff_net_analysis:
-  path_config: "input_samplesheet.csv"
-  edge_metric: "diff-L-P"
-  node_metric: "STC"
-  ranking_algorithm: "PageRank+"
+  # Configurations to run: the ten best configurations of the simulation benchmark
+  path_config: "top_10_configs_on_sim_samplesheet.csv"
+  # Not used: only read when run_type is "single"
+  node_metric: ""
+  edge_metric: ""
+  ranking_algorithm: ""
+  # Context network inference
+  test_type: "nonparametric"  # tests for continuous variables; the benchmark used "parametric"
+  multiple_testing: "bh"      # Benjamini-Hochberg
+  nan_value: -89             # missing-value code of the HANCOCK data
+  n_min_valid: 10             # minimum complete samples per pairwise test
+  # Edge filtering: disabled (filter_target empty); the other filter parameters are then not used
   filter_target: ""
   filter_method: ""
-  filter_param: 0
+  filter_param: ""
   filter_metric: ""
   filter_rule: ""
-  test_type: "nonparametric"
-  nan_value: -89
-  multiple_testing: "bh"
