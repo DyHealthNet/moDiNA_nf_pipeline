@@ -69,6 +69,9 @@ process simulate_copula {
             ${params.simulation.module_size ? "--module_size ${params.simulation.module_size}" : ''} \
             --module_fraction ${params.simulation.module_fraction ?: 0.1} \
             --module_correlation ${params.simulation.module_correlation != null ? params.simulation.module_correlation : 0.2} \
+            --missing_low ${params.simulation.missing_low ?: 0.0} \
+            --missing_high ${params.simulation.missing_high ?: 0.0} \
+            --missing_differential ${params.simulation.missing_differential ?: 0.0} \
             ${params.simulation.seed != null ? "--seed ${params.simulation.seed + meta.id}" : ''} \
             --output_suffix "${meta.id}"
     """

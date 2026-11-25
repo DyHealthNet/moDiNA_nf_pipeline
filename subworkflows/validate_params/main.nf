@@ -276,6 +276,15 @@ workflow validate_params {
         if (hub_scale != null && (!(hub_scale instanceof Number) || hub_scale < 0 || hub_scale >= 1)) {
             error "ERROR: Parameter 'simulation.module_hub_scale' must be a number in [0, 1)"
         }
+        def missing_low = params.simulation.missing_low != null ? params.simulation.missing_low : 0.0
+        def missing_high = params.simulation.missing_high != null ? params.simulation.missing_high : 0.0
+        if (!(missing_low instanceof Number) || !(missing_high instanceof Number) || missing_low < 0 || missing_low > missing_high || missing_high >= 1) {
+            error "ERROR: Parameters 'simulation.missing_low' and 'simulation.missing_high' must be numbers with 0 <= missing_low <= missing_high < 1"
+        }
+        def missing_differential = params.simulation.missing_differential
+        if (missing_differential != null && (!(missing_differential instanceof Number) || missing_differential < 0 || missing_differential > 1)) {
+            error "ERROR: Parameter 'simulation.missing_differential' must be a number in [0, 1]"
+        }
         def degree_low = params.simulation.hub_degree_low != null ? params.simulation.hub_degree_low : 3
         def degree_high = params.simulation.hub_degree_high != null ? params.simulation.hub_degree_high : 8
         if (!(degree_low instanceof Integer) || !(degree_high instanceof Integer) || degree_low < 1 || degree_low > degree_high) {
