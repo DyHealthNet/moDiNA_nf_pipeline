@@ -125,6 +125,15 @@ if __name__ == '__main__':
     parser.add_argument('--module_correlation', type=float, default=0.2,
                         help='Correlation between the module factors of the module background, in [0, 1)')
 
+    # MCAR missingness, applied after the data are generated (the complete data equal a run without it)
+    parser.add_argument('--missing_low', type=float, default=0.0,
+                        help='Lower end of the per-variable missing rate (0 <= missing_low <= missing_high < 1)')
+    parser.add_argument('--missing_high', type=float, default=0.0,
+                        help='Upper end of the per-variable missing rate (default 0: no missing values)')
+    parser.add_argument('--missing_differential', type=float, default=0.0,
+                        help='Share of variables, in [0, 1], whose rate is drawn separately for each context '
+                             '(0: one rate for both contexts, 1: every variable per context)')
+
     parser.add_argument('--seed', type=int, default=None,
                         help='Seed for the planting and sampling streams (`random` and `np.random`). '
                              'Omit for a fresh, non-reproducible draw')
@@ -183,7 +192,10 @@ if __name__ == '__main__':
                            background_model = args.background_model,
                            module_size = args.module_size,
                            module_fraction = args.module_fraction,
-                           module_correlation = args.module_correlation)
+                           module_correlation = args.module_correlation,
+                           missing_low = args.missing_low,
+                           missing_high = args.missing_high,
+                           missing_differential = args.missing_differential)
 
     # Per-node ground-truth stats (n_edges_tweaked, sum_magnitude) for save_gt's node file;
     # a node absent here (mean-shift-only) falls back to (0, 0.0) via save_gt's own .get() default.

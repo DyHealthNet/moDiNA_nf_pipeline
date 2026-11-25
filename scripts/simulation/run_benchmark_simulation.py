@@ -16,8 +16,9 @@ CSV conventions:
     the baseline (e.g. n_500 on the sample-size axis). It is skipped: the baseline run is that level.
   * Every other row must be complete. Exception: background_model, module_size, module_fraction,
     module_correlation, n_hub_cont/n_hub_bi/n_hub_cat, hub_degree_low/hub_degree_high,
-    n_module_hub_cont/n_module_hub_bi/n_module_hub_cat and module_hub_scale may be left blank (defaults:
-    modules, none, 0.1, 0.2, 0 hubs, 3 and 8, 0 module hubs, 0.5; a blank module_size means
+    n_module_hub_cont/n_module_hub_bi/n_module_hub_cat, module_hub_scale and missing_low/missing_high/missing_differential
+    may be left blank (defaults: modules, none, 0.1, 0.2, 0 hubs, 3 and 8, 0 module hubs, 0.5, no missing values;
+    a blank module_size means
     module_fraction x the number of variables), and so may pagerank_damping (default 0.85, the damping factor of
     PageRank+ / PageRank) and metric_pvalue (default adj-P; raw-P makes the metrics use unadjusted p-values). background_strength/background_density are only used by
     background_model scale_free.
@@ -29,6 +30,13 @@ Run with: python3 run_benchmark_simulation.py [--csv SHEET] [--params-dir DIR] [
 benchmark_runs_hubs.csv (main baseline with single-edge pairs and one module hub per type, every axis, each
 once with adj-P and once with raw-P metrics) writes to its own folder:
     python3 run_benchmark_simulation.py --csv benchmark_runs_hubs.csv --params-dir ../../params_files/simulation_hubs
+
+benchmark_runs_hubs.csv holds the missingness family (missingness / missingness_rawP: rates from 10-30 %, shared,
+mixed with 20 % of the variables per context, or all per context). benchmark_runs_missingness.csv (supplement: MCAR
+missingness of increasing amount on the hub main baseline, shared rates, same seeds, so replicate k holds the
+baseline's complete data with values removed) runs only the top configurations of the hub benchmark:
+    python3 run_benchmark_simulation.py --csv benchmark_runs_missingness.csv \
+        --params-dir ../../params_files/simulation_missingness --path-config ../../top_10pct_configs_on_sim_samplesheet.csv
 """
 
 import argparse
@@ -57,7 +65,8 @@ OPTIONAL_COLS = {'background_model': ('modules', str), 'module_size': (None, int
                  'n_hub_cont': (0, int), 'n_hub_bi': (0, int), 'n_hub_cat': (0, int),
                  'hub_degree_low': (3, int), 'hub_degree_high': (8, int),
                  'n_module_hub_cont': (0, int), 'n_module_hub_bi': (0, int), 'n_module_hub_cat': (0, int),
-                 'module_hub_scale': (0.5, float)}
+                 'module_hub_scale': (0.5, float),
+                 'missing_low': (0.0, float), 'missing_high': (0.0, float), 'missing_differential': (0.0, float)}
 DIFF_NET_STR_COLS = ['test_type', 'multiple_testing']
 # Optional differential-analysis columns: a blank cell (or a missing column) means the default
 DIFF_NET_OPTIONAL_COLS = {'pagerank_damping': (0.85, float), 'metric_pvalue': ('adj-P', str)}
